@@ -6,6 +6,7 @@ set(COG_EXEC cog.py)
 
 set(ENV{PYTHONPATH} ..)
 
+
 # Find Geant4 package, activating all available UI and Vis drivers by default
 # You can set WITH_GEANT4_UIVIS to OFF via the command line or ccmake/cmake-gui
 # to build a batch mode only executable
@@ -21,11 +22,11 @@ endif()
 include(${Geant4_USE_FILE})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# get root config
-EXECUTE_PROCESS(COMMAND root-config --cflags OUTPUT_VARIABLE ROOT_CXX_FLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
-EXECUTE_PROCESS(COMMAND root-config --libs OUTPUT_VARIABLE ROOT_LD_FLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-set(CMAKE_EXE_LINKER_FLAGS ${ROOT_LD_FLAGS})
+# Find ROOT
+find_package(ROOT REQUIRED)
+include(${ROOT_USE_FILE})
+include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
+add_definitions(${ROOT_CXX_FLAGS})
 
 # Locate sources and headers for this project
 file(GLOB main_source ${PROJECT_SOURCE_DIR}/photoconversion.cpp)
@@ -44,7 +45,7 @@ add_custom_command(
 
 # Add the executable, and link it to the Geant4 libraries
 add_executable(photoconversion photoconversion.cpp ${sources} ${headers})
-target_link_libraries(photoconversion ${Geant4_LIBRARIES})
+target_link_libraries(photoconversion ${ROOT_LIBRARIES} ${Geant4_LIBRARIES})
 
 # Make sure that only one target uses the sources at once
 add_custom_target(CogFiles DEPENDS ${main_source} ${sources} ${headers} COMMENT "Checking if re-cogging is required")
