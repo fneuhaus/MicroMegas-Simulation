@@ -1,6 +1,10 @@
+*.swp
 __pycache__/
 init.sh
 build/
 G4History.macro
 *.pyc
-simulation/photoconversion/photoconversion
+simulation/particleconversion/particleconversion
+simulation/avalanche/avalanche
+simulation/drift/drift
+simulation/outfiles/
