@@ -51,8 +51,8 @@ int main(int argc, char** argv) {
 		cog.outl("ui->SessionStart();")
 		cog.outl("delete ui;")
 
-	if "macro_path" in conf["photoconversion"]:
-		macro_path = conf["photoconversion"]["macro_path"]
+	if "macro_path" in conf["particleconversion"]:
+		macro_path = conf["particleconversion"]["macro_path"]
 		if macro_path != "": # run given macro file
 			cog.outl("G4UImanager* UImanager = G4UImanager::GetUIpointer();")
 			cog.outl("UImanager->ApplyCommand(\"/control/execute {}\");".format(macro_path))
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 		ui_start()
 	]]]*/
 	G4UImanager* UImanager = G4UImanager::GetUIpointer();
-	UImanager->ApplyCommand("/control/execute /localscratch/simulation_files/MicroMegas-Simulation/simulation/photoconversion/run.mac");
+	UImanager->ApplyCommand("/control/execute /localscratch/micromegas/simulation/photoconversion/run.mac");
 	//[[[end]]]
 	
 	delete visManager;

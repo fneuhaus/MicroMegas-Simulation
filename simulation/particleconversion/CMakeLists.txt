@@ -24,12 +24,12 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Find ROOT
 find_package(ROOT REQUIRED)
-include(${ROOT_USE_FILE})
+#include(${ROOT_USE_FILE})
 include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 add_definitions(${ROOT_CXX_FLAGS})
 
 # Locate sources and headers for this project
-file(GLOB main_source ${PROJECT_SOURCE_DIR}/photoconversion.cpp)
+file(GLOB main_source ${PROJECT_SOURCE_DIR}/particleconversion.cpp)
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hpp)
 file(GLOB macros ${PROJECT_SOURCE_DIR}/*.mac)
@@ -44,12 +44,12 @@ add_custom_command(
 )
 
 # Add the executable, and link it to the Geant4 libraries
-add_executable(photoconversion photoconversion.cpp ${sources} ${headers})
-target_link_libraries(photoconversion ${ROOT_LIBRARIES} ${Geant4_LIBRARIES})
+add_executable(particleconversion particleconversion.cpp ${sources} ${headers})
+target_link_libraries(particleconversion ${ROOT_LIBRARIES} ${Geant4_LIBRARIES})
 
 # Make sure that only one target uses the sources at once
 add_custom_target(CogFiles DEPENDS ${main_source} ${sources} ${headers} COMMENT "Checking if re-cogging is required")
-add_dependencies(photoconversion CogFiles)
+add_dependencies(particleconversion CogFiles)
 
 # For internal Geant4 use - but has no effect if you build this standalone
-add_custom_target(MM DEPENDS photoconversion)
+add_custom_target(MM DEPENDS particleconversion)

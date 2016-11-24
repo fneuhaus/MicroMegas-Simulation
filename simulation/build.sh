@@ -5,8 +5,8 @@ project_path=$(readlink -e $project_path)
 export PYTHONPATH="${PYTHONPATH}:$project_path"
 echo $PYTHONPATH
 
-echo "Building photoconversion..."
-cd "$project_path/photoconversion"
+echo "Building particleconversion..."
+cd "$project_path/particleconversion"
 mkdir -p "build" && cd "build"
 cmake -DCMAKE_INSTALL_PREFIX=.. ..
 make

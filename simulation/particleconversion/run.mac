@@ -8,7 +8,7 @@
 
 #[[[cog
 #	from MMconfig import *
-#	cog.outl("/run/beamOn {}".format(conf["general"]["number_of_gammas"]))
+#	cog.outl("/run/beamOn {}".format(conf["general"]["number_of_particles"]))
 #]]]
-/run/beamOn 100000
+/run/beamOn 10
 #[[[end]]]
