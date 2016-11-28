@@ -42,13 +42,6 @@ int main(int argc, char* argv[]) {
 		)
 	)
 	]]] */
-
-	const int maxAvalancheSize = 40; // constrains the maximum avalanche size, 0 means no limit
-	const double driftField = 600.0; // V/cm, should be positive for drift in -z direction
-	double areaXmin = -5.0, areaXmax = -areaXmin;
-	double areaYmin = -5.0, areaYmax = -areaYmin;
-	double areaZmin = 100.e-4, areaZmax = 3.; // begin and end of the drift region, 100µm above the mesh where the field gets inhomogeneous (value from: http://iopscience.iop.org/article/10.1088/1748-0221/6/06/P06011/pdf)
-
 	//[[[end]]]
 
 	TString inputfileName, outputfileName;
@@ -66,8 +59,6 @@ int main(int argc, char* argv[]) {
 		cog.outl("inputfileName = \"{}\";".format(conf["drift"]["in_filename"]))
 		cog.outl("outputfileName = \"{}\";".format(conf["drift"]["out_filename"]))
 		]]]*/
-		inputfileName = "/localscratch/simulation_files/MicroMegas-Simulation/outfiles/photoconversion.root";
-		outputfileName = "/localscratch/simulation_files/MicroMegas-Simulation/outfiles/drift.root";
 		//[[[end]]]
 	}
 
@@ -118,9 +109,6 @@ int main(int argc, char* argv[]) {
 	cog.outl("gas->SetTemperature({}+273.15);".format(conf["detector"]["temperature"]))
 	cog.outl("gas->SetPressure({} * 7.50062);".format(conf["detector"]["pressure"]))
 	]]]*/
-	gas->SetComposition("xe",99.0, "co2",1.0);
-	gas->SetTemperature(20.+273.15);
-	gas->SetPressure(100. * 7.50062);
 	//[[[end]]]
 	gas->EnableDrift();							// Allow for drifting in this medium
 	gas->SetMaxElectronEnergy(200.);
@@ -150,9 +138,13 @@ int main(int argc, char* argv[]) {
 	viewdrift->SetArea(areaXmin, areaYmin, areaZmin, areaXmax, areaYmax, areaZmax);
 	avalanchemicroscopic->EnablePlotting(viewdrift);
 	*/
-
-	SaveDrift* savedrift = new SaveDrift("/localscratch/simulation_files/MicroMegas-Simulation/outfiles/drift_lines.root");
-	avalanchemicroscopic->EnableSaving(savedrift);
+   /*[[[cog
+		from MMconfig import *
+		if eval(conf["drift"]["save_drift_lines"]):
+			cog.outl("SaveDrift* savedrift = new SaveDrift(\"{}\");".format(conf["drift"]["drift_lines_path"]))
+			cog.outl("avalanchemicroscopic->EnableSaving(savedrift);")
+   ]]]*/
+   //[[[end]]]
 
 	// actual simulation
 	for (int i=0; i<numberOfEvents; i++) {
@@ -170,9 +162,9 @@ int main(int argc, char* argv[]) {
 		cout << "\r" << setw(4) << i/(double)numberOfEvents*100. << "% done   "; flush(cout);
 		avalanchemicroscopic->AvalancheElectron(initialPosition.x(), initialPosition.y(), initialPosition.z(), initialTime, initialEnergy, initialDirection.x(), initialDirection.y(), initialDirection.z());
 
-		//Int_t ne, ni;
-		//avalanchemicroscopic->GetAvalancheSize(ne, ni);
-		//nele = ne;
+		Int_t ne, ni;
+		avalanchemicroscopic->GetAvalancheSize(ne, ni);
+		nele = ne;
 
 		// local variables to be pushed into vectors
 		Double_t xi, yi, zi, ti, ei;
@@ -196,7 +188,7 @@ int main(int argc, char* argv[]) {
 		x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
 		x1.clear(); y1.clear(); z1.clear(); e1.clear(); t1.clear();
 
-		//cout << "Avalanche Size     : " << nele << endl;
+		cout << "Avalanche Size     : " << nele << endl;
 		cout << "Electron end points: " << nelep << endl;
 	}
 	cout << endl;
@@ -206,7 +198,12 @@ int main(int argc, char* argv[]) {
 	outputFile->Close();
 	inputFile->Close();
 
-	delete savedrift;
+   /*[[[cog
+		from MMconfig import *
+		if eval(conf["drift"]["save_drift_lines"]):
+			cog.outl("	delete savedrift;")
+	]]]*/
+	//[[[end]]]
 
 	/*
 	viewdrift->Plot();

@@ -27,8 +27,5 @@
 #	z = cos(theta)
 #	cog.outl("/gun/direction {} {} {}".format(x, y, -z))
 #]]]
-/gun/particle e-
-/gun/energy 300. keV
-/gun/direction 0.0 0.0 -1.0
 #[[[end]]]
 # theta = arctan(x/z), x = z*tan(theta)

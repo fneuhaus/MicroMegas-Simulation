@@ -1,12 +1,12 @@
 INCDIR = $(GARFIELD_HOME)/Include
 HEEDDIR = $(GARFIELD_HOME)/Heed
-LIBDIR = $(GARFIELD_HOME)/Library
+LIBDIR = $(GARFIELD_HOME)/lib
 PYTHONPATH=..:$PYTHONPATH
 
 # Compiler flags
 CFLAGS = -Wall -Wextra -Wno-long-long \
 	`root-config --cflags` \
-	-O3 -fno-common -c \
+	 -fno-common -c \
 	-I$(INCDIR) -I$(HEEDDIR)
 
 LDFLAGS = `root-config --glibs` -lGeom -lgfortran -lm \
@@ -29,3 +29,7 @@ geometry/geometry/mesh.elements: geometry/geometry.msh
 
 geometry/geometry.msh: geometry/geometry.step
 	cd geometry; gmsh geometry.step -3 -order 2 -clmax 0.015
+
+clean-cog:
+	cog.py -x -r avalanche.cpp
+	cog.py -x -r geometry/calculate_field.sif

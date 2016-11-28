@@ -38,7 +38,6 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 		conf["detector"]["shield_cover_thickness"]
 	))
 	]]]*/
-	G4double z0 = 3.*cm + 4.e-4*cm + .5*cm + 4.e-4*cm + 1*mm;
 	//[[[end]]]
 	fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
 	

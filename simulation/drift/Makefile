@@ -1,6 +1,6 @@
 INCDIR = $(GARFIELD_HOME)/Include
 HEEDDIR = $(GARFIELD_HOME)/Heed
-LIBDIR = $(GARFIELD_HOME)/Library
+LIBDIR = $(GARFIELD_HOME)/lib
 PYTHONPATH=..:$PYTHONPATH
 
 # Compiler flags
@@ -21,3 +21,6 @@ drift: drift.cpp ../simulation.conf
 	$(CXX) $(CFLAGS) drift.cpp
 	$(CXX) -o drift drift.o $(LDFLAGS)
 	rm drift.o
+
+clean-cog:
+	cog.py -x -r drift.cpp

@@ -70,7 +70,6 @@ End
 Boundary Condition 1
   Target Boundaries(1) = 14
   ![[[cog from MMconfig import *; cog.outl("Potential = {}".format(-float(conf["drift"]["field"]) * float(conf["amplification"]["conversion_zone_height"]))) ]]]
-  Potential = -18.0
   ![[[end]]]
   Name = "Upper"
 End
@@ -86,7 +85,6 @@ End
 Boundary Condition 3
   Target Boundaries(1) = 5 
   ![[[cog from MMconfig import *; cog.outl("Potential = {}".format(float(conf["amplification"]["field"]) * float(conf["amplification"]["gap"]))) ]]]
-  Potential = 512.0
   ![[[end]]]
   Name = "Readout"
 End

@@ -61,8 +61,6 @@ int main(int argc, char** argv) {
 	else:
 		ui_start()
 	]]]*/
-	G4UImanager* UImanager = G4UImanager::GetUIpointer();
-	UImanager->ApplyCommand("/control/execute /localscratch/micromegas/simulation/particleconversion/run.mac");
 	//[[[end]]]
 	
 	delete visManager;

@@ -67,15 +67,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	cog.outl("G4double fCathodeThickness     = {}*cm;".format(conf["detector"]["cathode_thickness"]))
 	cog.outl("G4double fDetectorThickness    = {}*cm;".format(conf["particleconversion"]["z_cathode"]))
 	]]]*/
-	G4double fShieldCoverThickness = 4.e-4*cm;
-	G4double fShieldThickness      = .5*cm;
-	G4double fCathodeThickness     = 4.e-4*cm;
-	G4double fDetectorThickness    = 3.*cm;
 	//[[[end]]]
 
 	// World
 	//[[[cog from MMconfig import *; cog.outl("G4double sizeX_world = {}*cm, sizeY_world = {}*cm;".format(conf["detector"]["size_x"], conf["detector"]["size_y"])) ]]]
-	G4double sizeX_world = 10.*cm, sizeY_world = 10.*cm;
 	//[[[end]]]
 	G4double sizeZ_world  = 2.*(fDetectorThickness + fCathodeThickness + fShieldThickness + fShieldCoverThickness + 1*cm); 
 	G4Material* mat_air = nist->FindOrBuildMaterial("G4_AIR");
@@ -99,8 +94,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	cog.outl('G4double pressure = {}/100.; // pressure in bar'.format(conf["detector"]["pressure"]))
 	cog.outl('G4double temperature = {}+273.15; // temperature in kelvin'.format(conf["detector"]["temperature"]))
 	]]]*/
-	G4double pressure = 100./100.; // pressure in bar
-	G4double temperature = 20.+273.15; // temperature in kelvin
 	//[[[end]]]
 	G4double composition_density;
 
@@ -108,7 +101,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	// Shield cover
 	G4double sizeX_shield_cover = sizeX_world, sizeY_shield_cover = sizeY_world;
 	//[[[cog from MMconfig import*; cog.outl("G4Material* mat_shield_cover = nist->FindOrBuildMaterial(\"{}\");".format(conf["detector"]["shield_cover_material"])) ]]]
-	G4Material* mat_shield_cover = nist->FindOrBuildMaterial("G4_MYLAR");
 	//[[[end]]]
 
 	G4Box* solid_shield_cover = new G4Box("ShieldCover", .5*sizeX_shield_cover, .5*sizeY_shield_cover, .5*fShieldCoverThickness);
@@ -131,9 +123,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	for component, fract in shield_gas_composition.items():
 		cog.outl('shield_gas_composition->AddMaterial({}, {}*perCent);'.format(component, fract))
 	]]]*/
-	composition_density = (ar->GetDensity()*100.0)/100.0 * pressure;
-	G4Material* shield_gas_composition = new G4Material("ShieldGasComposition", composition_density, 1, kStateGas, temperature, pressure);
-	shield_gas_composition->AddMaterial(ar, 100.0*perCent);
 	//[[[end]]]
 	mat_shield = shield_gas_composition;
 
@@ -147,7 +136,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	// Cathode
 	G4double sizeX_cathode = sizeX_world, sizeY_cathode = sizeY_world;
 	//[[[cog from MMconfig import*; cog.outl("G4Material* mat_cathode = nist->FindOrBuildMaterial(\"{}\");".format(conf["detector"]["cathode_material"])) ]]]
-	G4Material* mat_cathode = nist->FindOrBuildMaterial("G4_MYLAR");
 	//[[[end]]]
 
 	G4Box* solid_cathode = new G4Box("Cathode", .5*sizeX_cathode, .5*sizeY_cathode, .5*fCathodeThickness);
@@ -175,10 +163,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	for component, fract in gas_composition.items():
 		cog.outl('gas_composition->AddMaterial({}, {}*perCent);'.format(component, fract))
 	]]]*/
-	composition_density = (ar->GetDensity()*90.0 + co2->GetDensity()*10.0)/100.0 * pressure;
-	G4Material* gas_composition = new G4Material("GasComposition", composition_density, 2, kStateGas, temperature, pressure);
-	gas_composition->AddMaterial(ar, 90.0*perCent);
-	gas_composition->AddMaterial(co2, 10.0*perCent);
 	//[[[end]]]
 	mat_detector = gas_composition;
 

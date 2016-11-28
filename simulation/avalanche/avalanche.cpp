@@ -42,12 +42,6 @@ int main(int argc, char * argv[]) {
 		)
 	)
 	]]] */
-
-	const int maxAvalancheSize = 0; // constrains the maximum avalanche size, 0 means no limit
-	double areaXmin = -5.0, areaXmax = -areaXmin;
-	double areaYmin = -5.0, areaYmax = -areaYmin;
-	double areaZmin = -20e-4, areaZmax = 100.e-4 + 200e-4; // begin and end of the drift region, 100µm above the mesh where the field gets inhomogeneous (value from: http://iopscience.iop.org/article/10.1088/1748-0221/6/06/P06011/pdf)
-
 	// [[[end]]]
 
 	TString inputfileName, outputfileName;
@@ -63,8 +57,6 @@ int main(int argc, char * argv[]) {
 		cog.outl("inputfileName = \"{}\";".format(conf["amplification"]["in_filename"]))
 		cog.outl("outputfileName = \"{}\";".format(conf["amplification"]["out_filename"]))
 		]]]*/
-		inputfileName = "/localscratch/simulation_files/MicroMegas-Simulation/outfiles/drift.root";
-		outputfileName = "/localscratch/simulation_files/MicroMegas-Simulation/outfiles/avalanche.root";
 		//[[[end]]]
 	}
 
@@ -124,19 +116,6 @@ int main(int argc, char * argv[]) {
 		""".format(conf["amplification"]["geometry_path"])
 	)
 	]]] */
-
-		ComponentElmer* fm = new ComponentElmer(
-			"/localscratch/simulation_files/MicroMegas-Simulation/simulation/avalanche/geometry/geometry/mesh.header",
-			"/localscratch/simulation_files/MicroMegas-Simulation/simulation/avalanche/geometry/geometry/mesh.elements",
-			"/localscratch/simulation_files/MicroMegas-Simulation/simulation/avalanche/geometry/geometry/mesh.nodes",
-			"/localscratch/simulation_files/MicroMegas-Simulation/simulation/avalanche/geometry/dielectrics.dat",
-			"/localscratch/simulation_files/MicroMegas-Simulation/simulation/avalanche/geometry/geometry/field.result",
-			"mm"
-		);
-	        fm->EnablePeriodicityX();
-	        fm->EnablePeriodicityY();
-		//fm->SetWeightingField("/localscratch/simulation_files/MicroMegas-Simulation/simulation/avalanche/geometry/geometry/field_weight.result", "readout");
-		
 	//[[[end]]]
 	fm->PrintRange();
 
@@ -149,9 +128,6 @@ int main(int argc, char * argv[]) {
 	cog.outl("gas->SetTemperature({}+273.15);".format(conf["detector"]["temperature"]))
 	cog.outl("gas->SetPressure({} * 7.50062);".format(conf["detector"]["pressure"]))
 	]]]*/
-	gas->SetComposition("ar",93.0, "co2",7.0);
-	gas->SetTemperature(20.+273.15);
-	gas->SetPressure(100. * 7.50062);
 	//[[[end]]]
 	gas->EnableDrift();							// Allow for drifting in this medium
 	gas->SetMaxElectronEnergy(200.);
@@ -195,7 +171,6 @@ int main(int argc, char * argv[]) {
 		for (int e=0; e<numberOfElectrons; e++) {
 			// Set the initial position [cm], direction, starting time [ns] and initial energy [eV]
 			//[[[cog from MMconfig import *; cog.outl("TVector3 initialPosition = TVector3(inPosX->at(e), inPosY->at(e), {});".format(conf["amplification"]["z_max"])) ]]]
-			TVector3 initialPosition = TVector3(inPosX->at(e), inPosY->at(e), 100.e-4);
 			//[[[end]]]
 			//TVector3 initialPosition = TVector3(inPosX->at(e), inPosY->at(e), inPosZ->at(e));
 			TVector3 initialDirection = TVector3(0., 0., -1.); // 0,0,0 for random initial direction
@@ -205,6 +180,7 @@ int main(int argc, char * argv[]) {
 			//cout << "Initial Time    : " << initialTime << " ns" << endl;
 			//cout << "Initial Energy  : " << initialEnergy << " eV" << endl;
 			//cout << "Initial position: " << initialPosition.x() << ", " << initialPosition.y()  << ", " << initialPosition.z() << " cm" << endl;
+         
 			avalanchemicroscopic->AvalancheElectron(initialPosition.x(), initialPosition.y(), initialPosition.z(), initialTime, initialEnergy, initialDirection.x(), initialDirection.y(), initialDirection.z());
 
 			Int_t ne, ni;
