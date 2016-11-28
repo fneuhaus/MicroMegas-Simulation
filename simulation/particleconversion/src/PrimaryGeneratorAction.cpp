@@ -32,7 +32,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	/*[[[cog
 	from MMconfig import *
 	cog.outl("G4double z0 = {}*cm + {}*cm + {}*cm + {}*cm + 1*mm;".format(
-		conf["photoconversion"]["z_cathode"],
+		conf["particleconversion"]["z_cathode"],
 		conf["detector"]["cathode_thickness"],
 		conf["detector"]["shield_thickness"],
 		conf["detector"]["shield_cover_thickness"]

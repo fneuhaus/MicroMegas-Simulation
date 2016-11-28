@@ -65,7 +65,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	cog.outl("G4double fShieldCoverThickness = {}*cm;".format(conf["detector"]["shield_cover_thickness"]))
 	cog.outl("G4double fShieldThickness      = {}*cm;".format(conf["detector"]["shield_thickness"]))
 	cog.outl("G4double fCathodeThickness     = {}*cm;".format(conf["detector"]["cathode_thickness"]))
-	cog.outl("G4double fDetectorThickness    = {}*cm;".format(conf["photoconversion"]["z_cathode"]))
+	cog.outl("G4double fDetectorThickness    = {}*cm;".format(conf["particleconversion"]["z_cathode"]))
 	]]]*/
 	G4double fShieldCoverThickness = 4.e-4*cm;
 	G4double fShieldThickness      = .5*cm;
@@ -175,10 +175,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	for component, fract in gas_composition.items():
 		cog.outl('gas_composition->AddMaterial({}, {}*perCent);'.format(component, fract))
 	]]]*/
-	composition_density = (co2->GetDensity()*7.0 + ar->GetDensity()*93.0)/100.0 * pressure;
+	composition_density = (ar->GetDensity()*90.0 + co2->GetDensity()*10.0)/100.0 * pressure;
 	G4Material* gas_composition = new G4Material("GasComposition", composition_density, 2, kStateGas, temperature, pressure);
-	gas_composition->AddMaterial(co2, 7.0*perCent);
-	gas_composition->AddMaterial(ar, 93.0*perCent);
+	gas_composition->AddMaterial(ar, 90.0*perCent);
+	gas_composition->AddMaterial(co2, 10.0*perCent);
 	//[[[end]]]
 	mat_detector = gas_composition;
 
