@@ -19,7 +19,6 @@ class OutputManager {
 		void Initialize();
 		void Save();
 		void PrintStatistic();
-		TTree* GetShieldTree() { return fShieldTree; }
 		TTree* GetDetectorTree() { return fDetectorTree; }
 
 		void FillEvent(TTree*, G4Track*);
@@ -27,7 +26,6 @@ class OutputManager {
 	private:
 		TFile*   fRootFile;
 
-		TTree*   fShieldTree;
 		TTree*   fDetectorTree;
 
 		G4double fPhiVertex, fPhi;

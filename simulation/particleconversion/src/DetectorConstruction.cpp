@@ -62,8 +62,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	G4bool checkOverlaps = true;
 	/*[[[cog
 	from MMconfig import *
-	cog.outl("G4double fShieldCoverThickness = {}*cm;".format(conf["detector"]["shield_cover_thickness"]))
-	cog.outl("G4double fShieldThickness      = {}*cm;".format(conf["detector"]["shield_thickness"]))
 	cog.outl("G4double fCathodeThickness     = {}*cm;".format(conf["detector"]["cathode_thickness"]))
 	cog.outl("G4double fDetectorThickness    = {}*cm;".format(conf["particleconversion"]["z_cathode"]))
 	]]]*/
@@ -72,7 +70,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	// World
 	//[[[cog from MMconfig import *; cog.outl("G4double sizeX_world = {}*cm, sizeY_world = {}*cm;".format(conf["detector"]["size_x"], conf["detector"]["size_y"])) ]]]
 	//[[[end]]]
-	G4double sizeZ_world  = 2.*(fDetectorThickness + fCathodeThickness + fShieldThickness + fShieldCoverThickness + 1*cm); 
+	G4double sizeZ_world  = 2.*(fDetectorThickness + fCathodeThickness + 1*cm); 
 	G4Material* mat_air = nist->FindOrBuildMaterial("G4_AIR");
 	G4Material* mat_vacuum = new G4Material("Vacuum", 1.e-5*g/cm3, 1, kStateGas, STP_Temperature, 2.e-2*bar);
 	mat_vacuum->AddMaterial(mat_air, 1.);
@@ -85,8 +83,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	// volume positions
 	G4ThreeVector pos_detector = G4ThreeVector(0, 0, .5*fDetectorThickness);
 	G4ThreeVector pos_cathode = G4ThreeVector(0, 0, .5*fCathodeThickness + fDetectorThickness);
-	G4ThreeVector pos_shield = G4ThreeVector(0, 0, .5*fShieldThickness + fCathodeThickness + fDetectorThickness);
-	G4ThreeVector pos_shield_cover = G4ThreeVector(0, 0, .5*fShieldCoverThickness + fShieldThickness + fCathodeThickness + fDetectorThickness);
 
 	// General detector values
 	/*[[[cog
@@ -97,41 +93,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	//[[[end]]]
 	G4double composition_density;
 
-
-	// Shield cover
-	G4double sizeX_shield_cover = sizeX_world, sizeY_shield_cover = sizeY_world;
-	//[[[cog from MMconfig import*; cog.outl("G4Material* mat_shield_cover = nist->FindOrBuildMaterial(\"{}\");".format(conf["detector"]["shield_cover_material"])) ]]]
-	//[[[end]]]
-
-	G4Box* solid_shield_cover = new G4Box("ShieldCover", .5*sizeX_shield_cover, .5*sizeY_shield_cover, .5*fShieldCoverThickness);
-	fLogicShieldCover = new G4LogicalVolume(solid_shield_cover, mat_shield_cover, "ShieldCover");
-	fPhysShieldCover = new G4PVPlacement(0, pos_shield_cover, fLogicShieldCover, "ShieldCover", fLogicWorld, false, 0, checkOverlaps);
-
-	// Shield
-	G4double sizeX_shield = sizeX_world, sizeY_shield = sizeY_world;
-	G4Material* mat_shield;
-	/*[[[cog
-	from MMconfig import *
-	shield_gas_composition = eval(conf["detector"]["shield_gas_composition"])
-	cog.outl(
-		'composition_density = ({})/{} * pressure;'.format(
-			' + '.join(['{}->GetDensity()*{}'.format(component, fraction) for component, fraction in shield_gas_composition.items()]),
-			sum(shield_gas_composition.values())
-		)
-	)
-	cog.outl('G4Material* shield_gas_composition = new G4Material("ShieldGasComposition", composition_density, {}, kStateGas, temperature, pressure);'.format(len(shield_gas_composition)))
-	for component, fract in shield_gas_composition.items():
-		cog.outl('shield_gas_composition->AddMaterial({}, {}*perCent);'.format(component, fract))
-	]]]*/
-	//[[[end]]]
-	mat_shield = shield_gas_composition;
-
-	G4Box* solid_shield = new G4Box("Shield", .5*sizeX_shield, .5*sizeY_shield, .5*fShieldThickness);
-	fLogicShield = new G4LogicalVolume(solid_shield, mat_shield, "Shield");
-	G4VisAttributes* visatt_shield = new G4VisAttributes(G4Colour(1., 1., 1.));
-	visatt_shield->SetForceWireframe(true);
-	fLogicShield->SetVisAttributes(visatt_shield);
-	fPhysShield = new G4PVPlacement(0, pos_shield, fLogicShield, "Shield", fLogicWorld, false, 0, checkOverlaps);
 
 	// Cathode
 	G4double sizeX_cathode = sizeX_world, sizeY_cathode = sizeY_world;
@@ -176,6 +137,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	return fPhysWorld;
 }
 
-void DetectorConstruction::SetPairEnergy(G4double val) {
+void DetectorConstruction::SetPairEnergy(G4double) {
   //if(val > 0.0) fCoatingMaterial->GetIonisation()->SetMeanEnergyPerIonPair(val);
 }

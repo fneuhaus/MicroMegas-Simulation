@@ -20,7 +20,6 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
 	G4VPhysicalVolume*  preVolume = step-> GetPreStepPoint()->GetTouchableHandle()->GetVolume();
 	G4VPhysicalVolume* postVolume = step->GetPostStepPoint()->GetTouchableHandle()->GetVolume();
 
-	G4VPhysicalVolume* shieldVolume   = fDetector->GetShieldVolume();
 	G4VPhysicalVolume* detectorVolume = fDetector->GetDetectorVolume();
 
 	G4Track* track = step->GetTrack();
@@ -33,18 +32,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
 			if (track->GetParentID() == 1) { // only secondaries
 				if (particle->GetParticleType() == "lepton") { // only electrons
 					fOutputManager->FillEvent(fOutputManager->GetDetectorTree(), track);
-					track->SetTrackStatus(fStopAndKill); // kill track
 					run->CountProcesses("gas", track->GetCreatorProcess());
-				}
-			}
-		}
-	} else if (preVolume == shieldVolume) {
-		if (track->GetCurrentStepNumber() == 1) {
-			if (track->GetParentID() == 1) {
-				if (particle->GetParticleType() == "lepton") {
-					fOutputManager->FillEvent(fOutputManager->GetShieldTree(), track);
-					track->SetTrackStatus(fStopAndKill);
-					run->CountProcesses("shield", track->GetCreatorProcess());
 				}
 			}
 		}

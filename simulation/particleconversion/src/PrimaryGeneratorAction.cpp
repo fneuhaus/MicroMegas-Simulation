@@ -31,11 +31,9 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	G4double x0 = 0, y0 = 0;
 	/*[[[cog
 	from MMconfig import *
-	cog.outl("G4double z0 = {}*cm + {}*cm + {}*cm + {}*cm + 1*mm;".format(
+	cog.outl("G4double z0 = {}*cm + {}*cm + 1*mm;".format(
 		conf["particleconversion"]["z_cathode"],
-		conf["detector"]["cathode_thickness"],
-		conf["detector"]["shield_thickness"],
-		conf["detector"]["shield_cover_thickness"]
+		conf["detector"]["cathode_thickness"]
 	))
 	]]]*/
 	//[[[end]]]
