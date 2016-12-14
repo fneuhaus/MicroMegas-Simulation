@@ -53,6 +53,12 @@ add_custom_target(clean-cog
 	COMMENT "Remove cog output from files"
 )
 
+# Remove cog output from files
+add_custom_target(recog
+	COMMAND ${COG_EXEC} -r ${main_source} ${sources} ${headers} ${macros}
+	COMMENT "Recog files"
+)
+
 # Make sure that only one target uses the sources at once
 add_custom_target(CogFiles DEPENDS ${main_source}  ${sources} ${headers} ${macros} COMMENT "Checking if re-cogging is required")
 add_dependencies(particleconversion CogFiles)
