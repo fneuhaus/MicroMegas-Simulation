@@ -38,11 +38,15 @@
 #include "G4ParticleTypes.hh"
 #include "G4ParticleTable.hh"
 
+/**
+ * @brief Create the physics list for the simulation
+ * @details The physics list is needed to tell what physics processes should be considered in the simulation.
+ */
 PhysicsList::PhysicsList() : G4VModularPhysicsList(), fEmPhysicsList(0), fDecayPhysicsList(0), fStepMaxProcess(0) {
 	G4EmParameters::Instance()->SetVerbose(1);
 
 	SetDefaultCutValue(1*mm);
- 
+
 	fStepMaxProcess = new StepMax();
 
 	// G4EmLivermorePhysics
@@ -60,6 +64,9 @@ PhysicsList::~PhysicsList() {
 	delete fStepMaxProcess;
 }
 
+/**
+ * @brief Construct the particles
+ */
 void PhysicsList::ConstructParticle() {
 	G4BosonConstructor pBosonConstructor;
 	pBosonConstructor.ConstructParticle();
@@ -77,9 +84,15 @@ void PhysicsList::ConstructParticle() {
 	pIonConstructor.ConstructParticle();
 
 	G4ShortLivedConstructor pShortLivedConstructor;
-	pShortLivedConstructor.ConstructParticle();  
+	pShortLivedConstructor.ConstructParticle();
 }
 
+/**
+ * @brief Construct the needed processes
+ * @details The needed processes are constructed here. For this part of the simulation
+ * this includes electron transportation, em-interactions, decays and a restricted max
+ * step size.
+ */
 void PhysicsList::ConstructProcess() {
 	AddTransportation();
 	fEmPhysicsList->ConstructProcess();
@@ -88,25 +101,25 @@ void PhysicsList::ConstructProcess() {
 }
 
 void PhysicsList::AddDecay() {
-  // Add Decay Process
+	// Add Decay Process
 
-  G4Decay* fDecayProcess = new G4Decay();
+	G4Decay* fDecayProcess = new G4Decay();
 
-  theParticleIterator->reset();
-  while( (*theParticleIterator)() ){
-    G4ParticleDefinition* particle = theParticleIterator->value();
-    G4ProcessManager* pmanager = particle->GetProcessManager();
+	theParticleIterator->reset();
+	while( (*theParticleIterator)() ){
+		G4ParticleDefinition* particle = theParticleIterator->value();
+		G4ProcessManager* pmanager = particle->GetProcessManager();
 
-    if (fDecayProcess->IsApplicable(*particle) && !particle->IsShortLived()) { 
+		if (fDecayProcess->IsApplicable(*particle) && !particle->IsShortLived()) {
 
-      pmanager->AddProcess(fDecayProcess);
+			pmanager->AddProcess(fDecayProcess);
 
-      // set ordering for PostStepDoIt and AtRestDoIt
-      pmanager->SetProcessOrdering(fDecayProcess, idxPostStep);
-      pmanager->SetProcessOrdering(fDecayProcess, idxAtRest);
+			// set ordering for PostStepDoIt and AtRestDoIt
+			pmanager->SetProcessOrdering(fDecayProcess, idxPostStep);
+			pmanager->SetProcessOrdering(fDecayProcess, idxAtRest);
 
-    }
-  }
+		}
+	}
 }
 
 void PhysicsList::AddStepMax() {

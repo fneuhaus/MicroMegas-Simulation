@@ -8,8 +8,9 @@ class G4VPhysicalVolume;
 class G4LogicalVolume;
 class G4Material;
 
-/// Detector construction class to define materials and geometry.
-
+/**
+ * @brief Detector construction class to define materials and geometry of the detector.
+ */
 class DetectorConstruction : public G4VUserDetectorConstruction {
 	public:
 		virtual G4VPhysicalVolume* Construct();

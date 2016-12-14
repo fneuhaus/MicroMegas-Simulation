@@ -13,6 +13,11 @@
 #include "G4SystemOfUnits.hh"
 #include "G4PhysicalConstants.hh"
 
+/**
+ * @brief Construction of the detector materials and the geometry.
+ * @details Here the detector volumes, the filling gas and the shields are constructed.
+ * @return Physical volume of the detector
+ */
 G4VPhysicalVolume* DetectorConstruction::Construct() {  
 	G4NistManager* nist = G4NistManager::Instance();
 
@@ -138,5 +143,5 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 }
 
 void DetectorConstruction::SetPairEnergy(G4double) {
-  //if(val > 0.0) fCoatingMaterial->GetIonisation()->SetMeanEnergyPerIonPair(val);
+	//if(val > 0.0) fCoatingMaterial->GetIonisation()->SetMeanEnergyPerIonPair(val);
 }

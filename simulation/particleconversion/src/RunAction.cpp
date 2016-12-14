@@ -23,14 +23,20 @@ G4Run* RunAction::GenerateRun() {
 
 void RunAction::BeginOfRunAction(const G4Run*) {
 	//G4RunManager::GetRunManager()->SetRandomNumberStore(true);
-	if (isMaster) G4Random::showEngineStatus();
+	if (isMaster) {
+		G4Random::showEngineStatus();
+	}
 
 	fOutputManager->Initialize();
 }
 
 void RunAction::EndOfRunAction(const G4Run* run) {
 	G4int nofEvents = run->GetNumberOfEvent();
-	if (nofEvents == 0) return;
+
+	// Abort if no events were generated
+	if (nofEvents == 0) {
+		return;
+	}
 
 	// Run conditions
 	//  note: There is no primary generator action object for "master"

@@ -17,7 +17,16 @@
 
 #include "Randomize.hh"
 
+/**
+ * Main method of the particle conversion simulation
+ * @param  argc  Number of given command line parameters
+ * @param  argv  Values of given command line parameters
+ * @return Status code
+ */
 int main(int argc, char** argv) {
+	//TODO: Implementing command line parameters
+	//TODO: Implementing return code
+
 	// Choose the Random engine
 	G4Random::setTheEngine(new CLHEP::RanecuEngine);
 	

@@ -5,6 +5,9 @@
 
 #include "DetectorConstruction.hpp"
 
+/**
+ * @brief This class is responsible for creating the action.
+ */
 class ActionInitialization : public G4VUserActionInitialization {
 	public:
 		ActionInitialization(DetectorConstruction*);
