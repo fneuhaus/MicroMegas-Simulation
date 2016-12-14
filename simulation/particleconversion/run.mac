@@ -10,5 +10,4 @@
 #	from MMconfig import *
 #	cog.outl("/run/beamOn {}".format(conf["general"]["number_of_particles"]))
 #]]]
-/run/beamOn 10
 #[[[end]]]
