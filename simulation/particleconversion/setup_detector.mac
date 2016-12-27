@@ -26,6 +26,8 @@
 #	y = sin(theta) * sin(phi)
 #	z = cos(theta)
 #	cog.outl("/gun/direction {} {} {}".format(x, y, -z))
+#	if 'max_step_size' in conf['particleconversion']:
+#		cog.outl("/MM/maxStep {}".format(conf['particleconversion']['max_step_size']))
 #]]]
 #[[[end]]]
 # theta = arctan(x/z), x = z*tan(theta)
