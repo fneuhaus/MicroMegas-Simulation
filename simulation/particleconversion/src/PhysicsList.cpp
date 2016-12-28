@@ -104,9 +104,9 @@ void PhysicsList::AddDecay() {
 	// Add Decay Process
 
 	G4Decay* fDecayProcess = new G4Decay();
-
+	G4ParticleTable::G4PTblDicIterator *theParticleIterator = this->GetParticleIterator();
 	theParticleIterator->reset();
-	while( (*theParticleIterator)() ){
+	while ((*theParticleIterator)()) {
 		G4ParticleDefinition* particle = theParticleIterator->value();
 		G4ProcessManager* pmanager = particle->GetProcessManager();
 
@@ -124,7 +124,7 @@ void PhysicsList::AddDecay() {
 
 void PhysicsList::AddStepMax() {
 	// Step limitation seen as a process
-
+	G4ParticleTable::G4PTblDicIterator *theParticleIterator = this->GetParticleIterator();
 	theParticleIterator->reset();
 	/*
 	while ((*theParticleIterator)()) {
@@ -139,6 +139,8 @@ void PhysicsList::AddStepMax() {
 }
 
 void PhysicsList::SetCuts() {
-	G4ProductionCutsTable::GetProductionCutsTable()->SetEnergyRange(100*eV,10*GeV);
-	if ( verboseLevel > 0 ) { DumpCutValuesTable(); }
+	G4ProductionCutsTable::GetProductionCutsTable()->SetEnergyRange(100 * eV, 10 * GeV);
+	if (verboseLevel > 0) {
+		DumpCutValuesTable();
+	}
 }
