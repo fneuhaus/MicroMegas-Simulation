@@ -57,6 +57,9 @@ int main(int argc, char** argv) {
 
 	def ui_start():
 		cog.outl("G4UIExecutive* ui = new G4UIExecutive(argc, argv);")
+		cog.outl("G4UImanager* UImanager = G4UImanager::GetUIpointer();")
+		cog.outl('UImanager->ApplyCommand("/control/macroPath {}");'.format(conf['particleconversion']['macro_folder']))
+		cog.outl('UImanager->ApplyCommand("/control/execute vis.mac");')
 		cog.outl("ui->SessionStart();")
 		cog.outl("delete ui;")
 
