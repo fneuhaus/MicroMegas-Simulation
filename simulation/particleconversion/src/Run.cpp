@@ -11,11 +11,17 @@ void Run::CountProcesses(const G4String part, const G4VProcess* proc)  {
 	G4String procName = proc->GetProcessName();
 
 	std::map<G4String,std::map<G4String,G4int> >::iterator part_it = fProcCounter.find(part);
-	if (part_it == fProcCounter.end()) fProcCounter[part] = std::map<G4String,G4int>();
+	if (part_it == fProcCounter.end()) {
+		fProcCounter[part] = std::map<G4String,G4int>();
+	}
 
 	std::map<G4String,G4int>::iterator it = fProcCounter[part].find(procName);
-	if (it == fProcCounter[part].end()) fProcCounter[part][procName] = 1;
-	else fProcCounter[part][procName]++;
+	if (it == fProcCounter[part].end()) {
+		fProcCounter[part][procName] = 1;
+	}
+	else {
+		fProcCounter[part][procName]++;
+	}
 }
 
 void Run::EndOfRun() {
