@@ -17,10 +17,19 @@ PrimaryGeneratorAction::PrimaryGeneratorAction() : G4VUserPrimaryGeneratorAction
 
 	// default particle kinematic
 	G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-	G4ParticleDefinition* particle = particleTable->FindParticle("gamma");
+	/*[[[cog
+	from MMconfig import *
+	cog.outl('G4ParticleDefinition* particle = particleTable->FindParticle("{}");'.format(conf['general']['particle_type']))
+	]]]*/
+	//[[[end]]]
 	fParticleGun->SetParticleDefinition(particle);
+
 	fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,-1.));
-	fParticleGun->SetParticleEnergy(200.*keV);
+	/*[[[cog
+	from MMconfig import *
+	cog.outl('fParticleGun->SetParticleEnergy({}*keV);'.format(conf['general']['particle_energy']))
+	]]]*/
+	//[[[end]]]
 }
 
 PrimaryGeneratorAction::~PrimaryGeneratorAction() {
