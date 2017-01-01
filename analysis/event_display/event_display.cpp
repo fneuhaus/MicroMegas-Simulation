@@ -18,11 +18,11 @@ using namespace std;
 void Avalanche::DrawEvent(Int_t i) {
 	GetEntry(i);
 	DrawDrift();
-	DrawPhotoconversion();
+	DrawParticleconversion();
 	DrawAvalanche();
 }
 
-void Avalanche::DrawPhotoconversion() {
+void Avalanche::DrawParticleconversion() {
 	TPolyLine3D* track = new TPolyLine3D(2);
 	track->SetPoint(0, pcPosx, pcPosy, pcPosz);
 	track->SetPoint(1, pcPosx + .5*pcPx, pcPosy + .5*pcPy, pcPosz + .5*pcPz);
@@ -79,13 +79,13 @@ void Avalanche::DrawAvalanche() {
 }
 
 void Avalanche::GetEntry(Int_t i) {
-	photoconversionTree->GetEntry(i);
+	particleconversionTree->GetEntry(i);
 	driftTree->GetEntry(i);
 	avalancheTree->GetEntry(i);
 }
 
 void Avalanche::Loop(Int_t eventNum) {
-	Long64_t nentries = photoconversionTree->GetEntriesFast();
+	Long64_t nentries = particleconversionTree->GetEntriesFast();
 	cout << nentries << " found, reading..." << endl;
 
 	if (eventNum >= 0) {

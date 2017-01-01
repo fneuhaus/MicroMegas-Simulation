@@ -14,7 +14,7 @@ using namespace std;
 
 class Avalanche {
 	public:
-		TTree *photoconversionTree, *driftTree, *avalancheTree; 
+		TTree *particleconversionTree, *driftTree, *avalancheTree; 
 
 		Double_t pcPosx, pcPosy, pcPosz;
 		Double_t pcPx, pcPy, pcPz;
@@ -38,16 +38,16 @@ class Avalanche {
 		void Loop(Int_t);
 		void GetEntry(Int_t);
 		void DrawEvent(Int_t);
-		void DrawPhotoconversion();
+		void DrawParticleconversion();
 		void DrawDrift();
 		void DrawAvalanche();
 };
 
 Avalanche::Avalanche(TString path) {
-	cout << "Using \"" << path << "\" to get photoconversion/drift/avalanche.root." << endl;
+	cout << "Using \"" << path << "\" to get particleconversion/drift/avalanche.root." << endl;
 
-	TFile* photoconversionFile = new TFile(path + "/photoconversion.root");
-	photoconversionTree = (TTree*)photoconversionFile->Get("detectorTree");
+	TFile* photoconversionFile = new TFile(path + "/particleconversion.root");
+	particleconversionTree = (TTree*)photoconversionFile->Get("detectorTree");
 
 	TFile* driftFile = new TFile(path + "/drift.root");
 	driftTree = (TTree*)driftFile->Get("driftTree");
@@ -59,8 +59,8 @@ Avalanche::Avalanche(TString path) {
 Avalanche::~Avalanche() {}
 
 void Avalanche::Init() {
-	photoconversionTree->SetBranchAddress("PosX", &pcPosx); photoconversionTree->SetBranchAddress("PosY", &pcPosy); photoconversionTree->SetBranchAddress("PosZ", &pcPosz);
-	photoconversionTree->SetBranchAddress("Px", &pcPx); photoconversionTree->SetBranchAddress("Py", &pcPy); photoconversionTree->SetBranchAddress("Pz", &pcPz);
+	particleconversionTree->SetBranchAddress("PosX", &pcPosx); particleconversionTree->SetBranchAddress("PosY", &pcPosy); particleconversionTree->SetBranchAddress("PosZ", &pcPosz);
+	particleconversionTree->SetBranchAddress("Px", &pcPx); particleconversionTree->SetBranchAddress("Py", &pcPy); particleconversionTree->SetBranchAddress("Pz", &pcPz);
 
 	driftTree->SetBranchAddress("x0", &dx0); driftTree->SetBranchAddress("y0", &dy0); driftTree->SetBranchAddress("z0", &dz0);
 	driftTree->SetBranchAddress("x1", &dx1); driftTree->SetBranchAddress("y1", &dy1); driftTree->SetBranchAddress("z1", &dz1);
