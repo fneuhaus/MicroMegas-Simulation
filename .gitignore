@@ -9,3 +9,4 @@ simulation/particleconversion/particleconversion
 simulation/avalanche/avalanche
 simulation/drift/drift
 simulation/outfiles/
+simulation/avalanche/geometry/geometry/elec.0001.vtu
