@@ -2,19 +2,17 @@
 #   Length: cm (1µm = 1e-4cm)
 #   Fields: V/cm
 
-# ↑ z                  ╲
-#                    ┌──────────────┐- z = z_cathode + shield_thickness
-#                    │   ╲          │
-#  photoconversion ╭ ├────── ... ───┤╴ z = z_cathode and drift:z_max
-#                  │ │     ╲        │
-#                  │ │     │╲       │
-#            drift ┤ │     │ ╲      │
-#                  │ │     │ │╲     │
-#                  │ │     │ │ ╲    │╴ z = drift:z_min and amplification:z_max
-#                  ├ ├┈┈┈┈┈┈ ... ┈┈┈┤╴ z = 0
-#    amplification │ │    ┊┊┊┊┊ ┊┊  │╴ z = amplification:z_min
-#                  ╰ └────── ... ───┘
-#                    ├── size_x/y ──┤
+# ↑ z                    ╲
+#  particleconversion ╭ ├────── ... ───┤╴ z = z_cathode and drift:z_max
+#                     │ │     ╲        │
+#                     │ │     │╲       │
+#               drift ┤ │     │ ╲      │
+#                     │ │     │ │╲     │
+#                     │ │     │ │ ╲    │╴ z = drift:z_min and amplification:z_max
+#                     ├ ├┈┈┈┈┈┈ ... ┈┈┈┤╴ z = 0
+#       amplification │ │    ┊┊┊┊┊ ┊┊  │╴ z = amplification:z_min
+#                     ╰ └────── ... ───┘
+#                       ├── size_x/y ──┤
 
 [general]
 	# path to the project root
@@ -27,8 +25,8 @@
 	z_transition = 100.e-4
 
 	# energy (in keV) and direction (in degrees) of the incoming particle
-	particle_type = e-
-	particle_energy = 10e5
+	particle_type = gamma
+	particle_energy = 10
 	particle_direction_theta = 0
 	particle_direction_phi   = 0
 	number_of_particles = 1
@@ -68,7 +66,7 @@
 	macro_folder = ${general:project_path}/particleconversion/
 
 	# macro path, if no path is defined interactive mode will be used
-	# macro_path = ${general:project_path}/particleconversion/run.mac
+	macro_path = ${general:project_path}/particleconversion/run.mac
 
 	# z coordinate of the lower end of the cathode (z_cathode - general:z_transition defines the thickness of gas volume)
 	z_cathode = 1.
@@ -79,7 +77,6 @@
 [drift]
 	# input file from conversion simulation
 	in_filename = ${particleconversion:out_filename}
-	#in_filename = ${general:output_path}/scripts/photoconversion_0.root
 
 	# output filename in general["output_path"]
 	out_filename = ${general:output_path}/drift.root
