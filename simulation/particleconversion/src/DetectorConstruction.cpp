@@ -130,7 +130,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	]]]*/
 	//[[[end]]]
 	fDetectorMaterial = gas_composition;
-	fDetectorMaterial->GetIonisation()->SetMeanEnergyPerIonPair(31. * eV);
+
+	/*[[[cog
+	from MMconfig import *
+	cog.outl('fDetectorMaterial->GetIonisation()->SetMeanEnergyPerIonPair({} * eV);'.format(conf['detector']['pair_production_energy']))
+	]]]*/
+	//[[[end]]]
 
 	G4Box* solid_detector = new G4Box("Detector", .5*sizeX_detector, .5*sizeY_detector, .5*fDetectorThickness);
 	fLogicDetector = new G4LogicalVolume(solid_detector, fDetectorMaterial, "Detector");
