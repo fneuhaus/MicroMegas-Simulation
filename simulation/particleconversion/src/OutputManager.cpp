@@ -9,7 +9,7 @@
 #include <TTree.h>
 
 OutputManager::OutputManager() 
-	: fRootFile(0), fPhiVertex(0), fPhi(0), fThetaVertex(0), fTheta(0), fT(0), fEkinVertex(0), fEkin(0), fEloss(0), fZVertex(0), fTrackLength(0), fPx(0), fPy(0), fPz(0), fPosX(0), fPosY(0), fPosZ(0) { 
+	: fRootFile(0), fEventID(0), fPhiVertex(0), fPhi(0), fThetaVertex(0), fTheta(0), fT(0), fEkinVertex(0), fEkin(0), fEloss(0), fZVertex(0), fTrackLength(0), fPx(0), fPy(0), fPz(0), fPosX(0), fPosY(0), fPosZ(0) { 
 }
 
 OutputManager::~OutputManager() {
@@ -29,6 +29,7 @@ void OutputManager::Initialize() {
 	}
 
 	fDetectorTree = new TTree("detectorTree", "Conversion");
+	fDetectorTree->Branch("eventID", &fEventID, "eventID/i"); // event id
 	fDetectorTree->Branch("phi", &fPhi, "phi/D"); // phi angle
 	fDetectorTree->Branch("theta", &fTheta, "theta/D"); // theta angle to z axis
 	fDetectorTree->Branch("EkinVertex", &fEkinVertex, "EkinVertex/D");
