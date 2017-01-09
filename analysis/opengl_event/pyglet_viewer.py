@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import sys
 from pyglet import clock, font, image, window
 from pyglet.gl import *
 
@@ -184,21 +184,21 @@ class Window(pyglet.window.Window):
 
 	def on_mouse_press(self, x, y, button, modifiers):
 		norm_x, norm_y = norm1(x, self.width), norm1(y, self.height)
-		if button == window.mouse.MIDDLE and not modifiers:
-			self.view.camera.mouse_roll(norm_x, norm_y, dragging=False)
-		if button == window.mouse.MIDDLE and modifiers == window.key.MOD_SHIFT:
+		if button == window.mouse.LEFT and (not (modifiers & (window.key.MOD_SHIFT | window.key.MOD_CTRL | window.key.MOD_ALT))):
+		 	self.view.camera.mouse_roll(norm_x, norm_y, dragging=False)
+		if button == window.mouse.LEFT and modifiers & window.key.MOD_SHIFT:
 			self.view.camera.mouse_move(norm_x, norm_y, self.view.fov, dragging=False)
-		if button == window.mouse.MIDDLE and modifiers == window.key.MOD_CTRL:
+		if button == window.mouse.LEFT and modifiers & window.key.MOD_CTRL:
 			self.view.camera.mouse_zoom(norm_x, norm_y, dragging=False)
-
 	def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
 		norm_x, norm_y = norm1(x, self.width), norm1(y, self.height)
-		if button == window.mouse.MIDDLE and not modifiers:
+		if button == window.mouse.LEFT and (not (modifiers & (window.key.MOD_SHIFT | window.key.MOD_CTRL | window.key.MOD_ALT))):
 			self.view.camera.mouse_roll(norm_x, norm_y)
-		if button == window.mouse.MIDDLE and modifiers == window.key.MOD_SHIFT:
+		if button == window.mouse.LEFT and modifiers & window.key.MOD_SHIFT:
 			self.view.camera.mouse_move(norm_x, norm_y, self.view.fov)
-		if button == window.mouse.MIDDLE and modifiers == window.key.MOD_CTRL:
+		if button == window.mouse.LEFT and modifiers & window.key.MOD_CTRL:
 			self.view.camera.mouse_zoom(norm_x, norm_y)
+
 
 	def on_mouse_scroll(self, x, y, dx, dy):
 		# zoom implemented according to: https://www.opengl.org/archives/resources/faq/technical/viewing.htm Section 8.040
@@ -213,4 +213,7 @@ class EventViewer():
 		pyglet.app.run()
 
 if __name__ == '__main__':
-	EventViewer('/localscratch/simulation_files/MicroMegas-Simulation/outfiles/drift_lines_90_10.root')
+	if len(sys.argv) > 1:
+		EventViewer(sys.argv[1])
+	else:
+		EventViewer('/localscratch/micromegas/simulation/outfiles/drift_lines.root')
