@@ -76,11 +76,11 @@ class MeshGenerator(QtGui.QWidget):
 	def generate_unit_cell(self):
 		'''Generates a complete unit cell from single mesh wires.'''
 		try:
-			mesh_lattice_const = float(self.sb_mesh_lattice_const.text())*1e-3
-			wire_diameter = float(self.sb_wire_diameter.text())*1e-3
-			space_above_mesh = float(self.sb_space_above_mesh.text())*1e-3
-			space_below_mesh = float(self.sb_space_below_mesh.text())*1e-3
-			safety_distance = float(self.sb_safety_distance.text())*1e-3 # to prevent overlap of wires, which can cause trouble in later union or common operations and some other glitches
+			mesh_lattice_const = float(self.sb_mesh_lattice_const.text().replace(',', '.'))*1e-3
+			wire_diameter = float(self.sb_wire_diameter.text().replace(',', '.'))*1e-3
+			space_above_mesh = float(self.sb_space_above_mesh.text().replace(',', '.'))*1e-3
+			space_below_mesh = float(self.sb_space_below_mesh.text().replace(',', '.'))*1e-3
+			safety_distance = float(self.sb_safety_distance.text().replace(',', '.'))*1e-3 # to prevent overlap of wires, which can cause trouble in later union or common operations and some other glitches
 		except:
 			FreeCAD.Console.PrintError("Error in evaluating the parameters")
 
