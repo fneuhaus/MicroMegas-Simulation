@@ -105,6 +105,15 @@
 	# path of the geometry files
 	geometry_path = ${general:project_path}/avalanche/geometry
 
+	# save the drift lines
+	save_drift_lines = 1
+	drift_lines_path = ${general:output_path}/drift_lines_avalance.root
+
+	# save electric field / save electric field
+	# if you don't want to save the plot remove `draw_field_path`
+	save_electric_field = 1
+	electric_field_path = ${general:output_path}/renders/field.pdf
+
 	# size of the amplification gap (normally 128µm)
 	gap = 128e-4
 
