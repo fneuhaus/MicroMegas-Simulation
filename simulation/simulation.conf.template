@@ -108,10 +108,13 @@
 	# save the drift lines
 	save_drift_lines = 1
 	drift_lines_path = ${general:output_path}/drift_lines_avalance.root
+	drift_lines_skipping_factor = 10
 
 	# save electric field / save electric field
 	# if you don't want to save the plot remove `draw_field_path`
 	save_electric_field = 1
+	electric_field_xbins = 400
+	electric_field_ybins = 250
 	electric_field_path = ${general:output_path}/renders/field.pdf
 
 	# size of the amplification gap (normally 128µm)
@@ -119,7 +122,7 @@
 
 	# z boundaries of the amplification simulation (to test the mesh transparency z_min=-20µm is a good value to save simulation time)
 	z_max = ${drift:z_min}
-	z_min = -20e-4
+	z_min = -200e-4
 
 	# some additional safety distance to prevent electrons from getting captured at the upper z boundary (with: z_max + z_max_safety < space above the mesh in the CAD model)
 	z_max_safety = 200e-4

@@ -110,8 +110,8 @@ int main(int argc, char * argv[]) {
 			"{0}/geometry/field.result",
 			"mm"
 		);
-	        fm->EnablePeriodicityX();
-	        fm->EnablePeriodicityY();
+		fm->EnablePeriodicityX();
+		fm->EnablePeriodicityY();
 		//fm->SetWeightingField("{0}/geometry/field_weight.result", "readout");
 		""".format(conf["amplification"]["geometry_path"])
 	)
@@ -159,6 +159,8 @@ int main(int argc, char * argv[]) {
 	if conf['amplification']['save_drift_lines']:
 		cog.outl('SaveDrift* savedrift = new SaveDrift("{}");'.format(conf['amplification']['drift_lines_path']))
 		cog.outl('avalanchemicroscopic->EnableSaving(savedrift);')
+		cog.outl('avalanchemicroscopic->SetSkippingFactor({});'.format(conf['amplification']['drift_lines_skipping_factor']))
+		cog.outl('avalanchemicroscopic->SetSavingAutoEndEvent(false);')
 	]]]*/
 	///[[[end]]]
 	
@@ -171,11 +173,12 @@ int main(int argc, char * argv[]) {
 	viewfield->SetPlane(0., -1., 0., 0., 0., 0.);
 	viewfield->SetComponent(fm);
 	viewfield->SetArea(areaXmin, areaZmin, areaXmax, 0);
-	viewfield->SetNumberOfSamples2d(400, 400);
+	viewfield->SetNumberOfContours(255);
+	viewfield->SetNumberOfSamples2d({bins_x}, {bins_y});
 	viewfield->PlotContour();
-	c1->SaveAs("{}");
+	c1->SaveAs("{filename}");
 	delete viewfield;
-	delete c1;'''.format(conf['amplification']['electric_field_path']))
+	delete c1;'''.format(bins_x=conf['amplification']['electric_field_xbins'], bins_y=conf['amplification']['electric_field_ybins'], filename=conf['amplification']['electric_field_path']))
 	]]]*/
 	///[[[end]]]
 
@@ -227,7 +230,7 @@ int main(int argc, char * argv[]) {
 			cout << setw(5) << i/(double)numberOfEvents*100. << "% of all events done." << endl;
 			cout << setw(4) << e/(double)numberOfElectrons*100. << "% of this event done." << endl;
 		}
-
+		avalanchemicroscopic->SavingEndEvent();
 		outputTree->Fill();
 		x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
 		x1.clear(); y1.clear(); z1.clear(); e1.clear(); t1.clear();
