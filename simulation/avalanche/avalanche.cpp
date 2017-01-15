@@ -110,8 +110,8 @@ int main(int argc, char * argv[]) {
 			"{0}/geometry/field.result",
 			"mm"
 		);
-	        fm->EnablePeriodicityX();
-	        fm->EnablePeriodicityY();
+		fm->EnablePeriodicityX();
+		fm->EnablePeriodicityY();
 		//fm->SetWeightingField("{0}/geometry/field_weight.result", "readout");
 		""".format(conf["amplification"]["geometry_path"])
 	)
@@ -153,12 +153,34 @@ int main(int argc, char * argv[]) {
 	if (maxAvalancheSize > 0) avalanchemicroscopic->EnableAvalancheSizeLimit(maxAvalancheSize);
 	//avalanchemicroscopic->EnableSignalCalculation();
 
-	/*
-	TApplication app("app", &argc, argv);
-	ViewDrift* viewdrift = new ViewDrift();
-	viewdrift->SetArea(areaXmin, areaYmin, areaZmin-0.001, areaXmax, areaYmax, areaZmax+0.001);
-	avalanchemicroscopic->EnablePlotting(viewdrift);
-	*/
+
+	/* [[[cog
+	from MMconfig import *
+	if conf['amplification']['save_drift_lines']:
+		cog.outl('SaveDrift* savedrift = new SaveDrift("{}");'.format(conf['amplification']['drift_lines_path']))
+		cog.outl('avalanchemicroscopic->EnableSaving(savedrift);')
+		cog.outl('avalanchemicroscopic->SetSkippingFactor({});'.format(conf['amplification']['drift_lines_skipping_factor']))
+		cog.outl('avalanchemicroscopic->SetSavingAutoEndEvent(false);')
+	]]]*/
+	///[[[end]]]
+	
+	/* [[[cog
+	from MMconfig import *
+	if conf['amplification']['save_electric_field']:
+		cog.outl('''TCanvas *c1 = new TCanvas();
+	ViewField *viewfield = new ViewField();
+	viewfield->SetCanvas(c1);
+	viewfield->SetPlane(0., -1., 0., 0., 0., 0.);
+	viewfield->SetComponent(fm);
+	viewfield->SetArea(areaXmin, areaZmin, areaXmax, 0);
+	viewfield->SetNumberOfContours(255);
+	viewfield->SetNumberOfSamples2d({bins_x}, {bins_y});
+	viewfield->PlotContour();
+	c1->SaveAs("{filename}");
+	delete viewfield;
+	delete c1;'''.format(bins_x=conf['amplification']['electric_field_xbins'], bins_y=conf['amplification']['electric_field_ybins'], filename=conf['amplification']['electric_field_path']))
+	]]]*/
+	///[[[end]]]
 
 	// actual simulation
 	for (int i=0; i<numberOfEvents; i++) {
@@ -208,7 +230,7 @@ int main(int argc, char * argv[]) {
 			cout << setw(5) << i/(double)numberOfEvents*100. << "% of all events done." << endl;
 			cout << setw(4) << e/(double)numberOfElectrons*100. << "% of this event done." << endl;
 		}
-
+		avalanchemicroscopic->SavingEndEvent();
 		outputTree->Fill();
 		x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
 		x1.clear(); y1.clear(); z1.clear(); e1.clear(); t1.clear();
@@ -218,11 +240,13 @@ int main(int argc, char * argv[]) {
 	outputFile->Write();
 	outputFile->Close();
 	inputFile->Close();
+	/* [[[cog
+	from MMconfig import *
+	if conf['amplification']['save_drift_lines']:
+		cog.outl('delete savedrift;')
+	]]]*/
+	///[[[end]]]
 
-	/*
-	viewdrift->Plot();
-	app.Run(kFALSE);
-	*/
 
 	cout << "Done." << endl;
 	return 0;

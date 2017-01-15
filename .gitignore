@@ -4,8 +4,10 @@ init.sh
 build/
 G4History.macro
 *.pyc
+simulation/simulation.conf
 simulation/particleconversion/particleconversion
 simulation/avalanche/avalanche
 simulation/drift/drift
 simulation/outfiles/
 .clang_complete
+simulation/avalanche/geometry/geometry/elec.0001.vtu

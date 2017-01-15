@@ -17,9 +17,10 @@ class DetectorConstruction : public G4VUserDetectorConstruction {
 
 		G4VPhysicalVolume* GetDetectorVolume() { return fPhysDetector; }
 
-		void SetPairEnergy(G4double);
+		void SetPairEnergy(G4double val);
 
 	private:
+		G4Material			 *fDetectorMaterial;
 		G4VPhysicalVolume* fPhysWorld;
 		G4VPhysicalVolume* fPhysCathode;
 		G4VPhysicalVolume* fPhysDetector;

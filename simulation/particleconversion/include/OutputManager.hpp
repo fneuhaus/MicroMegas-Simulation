@@ -28,6 +28,7 @@ class OutputManager {
 
 		TTree*   fDetectorTree;
 
+		G4int		fEventID;
 		G4double fPhiVertex, fPhi;
 		G4double fThetaVertex, fTheta;
 		G4double fT;

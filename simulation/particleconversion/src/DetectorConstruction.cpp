@@ -115,7 +115,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	// Detector
 	G4double sizeX_detector = sizeX_world, sizeY_detector = sizeY_world;
 
-	G4Material* mat_detector;
 	/*[[[cog
 	from MMconfig import *
 	gas_composition = eval(conf["detector"]["gas_composition"])
@@ -130,10 +129,16 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 		cog.outl('gas_composition->AddMaterial({}, {}*perCent);'.format(component, fract))
 	]]]*/
 	//[[[end]]]
-	mat_detector = gas_composition;
+	fDetectorMaterial = gas_composition;
+
+	/*[[[cog
+	from MMconfig import *
+	cog.outl('fDetectorMaterial->GetIonisation()->SetMeanEnergyPerIonPair({} * eV);'.format(conf['detector']['pair_production_energy']))
+	]]]*/
+	//[[[end]]]
 
 	G4Box* solid_detector = new G4Box("Detector", .5*sizeX_detector, .5*sizeY_detector, .5*fDetectorThickness);
-	fLogicDetector = new G4LogicalVolume(solid_detector, mat_detector, "Detector");
+	fLogicDetector = new G4LogicalVolume(solid_detector, fDetectorMaterial, "Detector");
 	G4VisAttributes* visatt_detector = new G4VisAttributes(G4Colour(1., 1., 1.));
 	visatt_detector->SetForceWireframe(true);
 	fLogicDetector->SetVisAttributes(visatt_detector);
@@ -142,6 +147,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 	return fPhysWorld;
 }
 
-void DetectorConstruction::SetPairEnergy(G4double) {
-	//if(val > 0.0) fCoatingMaterial->GetIonisation()->SetMeanEnergyPerIonPair(val);
+/**
+ * Set the mean energy (in eV) needed to produce one electron-ion-pair in the detector gas.
+ * @param val Mean energy in eV.
+ */
+void DetectorConstruction::SetPairEnergy(G4double val) {
+	if (val > 0.0) {
+		fDetectorMaterial->GetIonisation()->SetMeanEnergyPerIonPair(val);
+	}
 }
