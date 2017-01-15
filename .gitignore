@@ -8,3 +8,4 @@ simulation/particleconversion/particleconversion
 simulation/avalanche/avalanche
 simulation/drift/drift
 simulation/outfiles/
+.clang_complete
