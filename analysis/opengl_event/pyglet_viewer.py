@@ -12,12 +12,13 @@ from utils.trackball_camera import TrackballCamera, norm1
 from utils import data_io
 from utils.solarized import colors
 
+
 class Hud():
 	def __init__(self, window, view):
 		self.window = window
 		self.view = view
 		self.font = font.load('Helvetica', 10)
-		self.fps = clock.ClockDisplay(font=self.font, interval=0.2, color=(0,0,0, 1))
+		self.fps = clock.ClockDisplay(font=self.font, interval=0.2, color=(0, 0, 0, 1))
 
 	def update(self):
 		'''Called on window resize.'''
@@ -25,8 +26,9 @@ class Hud():
 		self.draw()
 
 	def update_text(self, text=None):
-		if not text: text = 'FOV: {:.3}'.format(self.view.fov)
-		props = dict(x=self.window.width-10, y=10, halign=font.Text.RIGHT, valign=font.Text.BOTTOM, color=(0, 0, 0, 0.5))
+		if not text:
+			text = 'FOV: {:.3}'.format(self.view.fov)
+		props = dict(x=self.window.width - 10, y=10, halign=font.Text.RIGHT, valign=font.Text.BOTTOM, color=(0, 0, 0, 0.5))
 		self.text = font.Text(self.font, text, **props)
 
 	def draw(self):
@@ -37,9 +39,10 @@ class Hud():
 		self.fps.draw()
 		glPopMatrix()
 
+
 class World():
 	def __init__(self, input_file_path):
-		self.bounding_box = [(-1,1), (-1,1), (0,3)]
+		self.bounding_box = [(-1, 1), (-1, 1), (0, 3)]
 		self.init_coordinate_system(1)
 		self.init_vertex_lists(input_file_path)
 
@@ -70,38 +73,38 @@ class World():
 		glBegin(GL_LINE_STRIP)
 		# bounding box
 		glColor3f(*colors['base1'])
-		glVertex3f(self.bounding_box[0][0],self.bounding_box[1][0],self.bounding_box[2][1])
-		glVertex3f(self.bounding_box[0][1],self.bounding_box[1][0],self.bounding_box[2][1])
-		glVertex3f(self.bounding_box[0][1],self.bounding_box[1][1],self.bounding_box[2][1])
-		glVertex3f(self.bounding_box[0][0],self.bounding_box[1][1],self.bounding_box[2][1])
-		glVertex3f(self.bounding_box[0][0],self.bounding_box[1][0],self.bounding_box[2][1])
+		glVertex3f(self.bounding_box[0][0], self.bounding_box[1][0], self.bounding_box[2][1])
+		glVertex3f(self.bounding_box[0][1], self.bounding_box[1][0], self.bounding_box[2][1])
+		glVertex3f(self.bounding_box[0][1], self.bounding_box[1][1], self.bounding_box[2][1])
+		glVertex3f(self.bounding_box[0][0], self.bounding_box[1][1], self.bounding_box[2][1])
+		glVertex3f(self.bounding_box[0][0], self.bounding_box[1][0], self.bounding_box[2][1])
 		glEnd()
 
 		glBegin(GL_LINES)
 		# coordinate system
 		glColor3f(*colors['red'])
-		glVertex3f(self.bounding_box[0][0],0,0); glVertex3f(self.bounding_box[0][1],0,0)
+		glVertex3f(self.bounding_box[0][0], 0, 0); glVertex3f(self.bounding_box[0][1], 0, 0)
 		for x in np.arange(self.bounding_box[0][0], self.bounding_box[0][1], step_size):
 			glVertex3f(x, -marker_len, 0); glVertex3f(x, marker_len, 0)
 			glVertex3f(x, 0, -marker_len); glVertex3f(x, 0, marker_len)
 
 		glColor3f(*colors['green'])
-		glVertex3f(0,self.bounding_box[1][0],0); glVertex3f(0,self.bounding_box[1][1],0)
+		glVertex3f(0, self.bounding_box[1][0], 0); glVertex3f(0, self.bounding_box[1][1], 0)
 		for y in np.arange(self.bounding_box[1][0], self.bounding_box[1][1], step_size):
 			glVertex3f(-marker_len, y, 0); glVertex3f(marker_len, y, 0)
 			glVertex3f(0, y, -marker_len); glVertex3f(0, y, marker_len)
 
 		glColor3f(*colors['blue'])
-		glVertex3f(0,0,self.bounding_box[2][0]); glVertex3f(0,0,self.bounding_box[2][1])
+		glVertex3f(0, 0, self.bounding_box[2][0]); glVertex3f(0, 0, self.bounding_box[2][1])
 		for z in np.arange(self.bounding_box[2][0], self.bounding_box[2][1], step_size):
 			glVertex3f(-marker_len, 0, z); glVertex3f(marker_len, 0, z)
 			glVertex3f(0, -marker_len, z); glVertex3f(0, marker_len, z)
 
 		# x-y grid
 		glColor3f(*colors['base1'])
-		for x in np.arange(self.bounding_box[0][0], self.bounding_box[0][1]+step_size, step_size):
+		for x in np.arange(self.bounding_box[0][0], self.bounding_box[0][1] + step_size, step_size):
 			glVertex3f(x, self.bounding_box[1][0], 0); glVertex3f(x, self.bounding_box[1][1], 0)
-		for y in np.arange(self.bounding_box[1][0], self.bounding_box[1][1]+step_size, step_size):
+		for y in np.arange(self.bounding_box[1][0], self.bounding_box[1][1] + step_size, step_size):
 			glVertex3f(self.bounding_box[0][0], y, 0); glVertex3f(self.bounding_box[0][1], y, 0)
 		glEnd()
 		glPopMatrix()
@@ -110,23 +113,26 @@ class World():
 	def draw(self):
 		glMatrixMode(GL_MODELVIEW)
 		glPushMatrix()
-		glTranslatef(0,0,-1.5)
+		glTranslatef(0, 0, -1.5)
 
-		glCallList(1) # draw coordinate system
-		
+		glCallList(1)  # draw coordinate system
+
 		glPointSize(5)
 		glBegin(GL_POINTS)
-		glColor3f(*colors['green']) # draw start points
-		for start_point in self.start_points: glVertex3f(*start_point)
-		glColor3f(*colors['red']) # draw end points
-		for end_point in self.end_points: glVertex3f(*end_point)
+		glColor3f(*colors['green'])  # draw start points
+		for start_point in self.start_points:
+			glVertex3f(*start_point)
+		glColor3f(*colors['red'])  # draw end points
+		for end_point in self.end_points:
+			glVertex3f(*end_point)
 		glEnd()
 
-		glColor4f(0,0,0,.3) # draw drift lines
+		glColor4f(0, 0, 0, 0.3)  # draw drift lines
 		for vertex_list in self.vertex_lists:
 			vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
 
 		glPopMatrix()
+
 
 class View():
 	def __init__(self, window, input_file_path):
@@ -145,7 +151,7 @@ class View():
 	def world_projection(self):
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
-		aspect_ratio = self.window.width/self.window.height
+		aspect_ratio = self.window.width / self.window.height
 		gluPerspective(self.fov, aspect_ratio, 0.01, 100)
 
 	def hud_projection(self):
@@ -161,17 +167,18 @@ class View():
 		self.hud_projection()
 		self.hud.draw()
 
+
 class Window(pyglet.window.Window):
 	def __init__(self, width, height, input_file_path, title=''):
 		super().__init__(width=width, height=height, caption=title)
 		self.init_opengl()
 
 		self.view = View(self, input_file_path)
-		#self.push_handlers(pyglet.window.event.WindowEventLogger()) # to show window events
+		# self.push_handlers(pyglet.window.event.WindowEventLogger()) # to show window events
 
 	def init_opengl(self):
-		#glClearColor(colors['base3'][0], colors['base3'][1], colors['base3'][2], 1.)
-		glClearColor(1,1,1,1)
+		# glClearColor(colors['base3'][0], colors['base3'][1], colors['base3'][2], 1.)
+		glClearColor(1, 1, 1, 1)
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_BLEND)
 
@@ -185,11 +192,12 @@ class Window(pyglet.window.Window):
 	def on_mouse_press(self, x, y, button, modifiers):
 		norm_x, norm_y = norm1(x, self.width), norm1(y, self.height)
 		if button == window.mouse.LEFT and (not (modifiers & (window.key.MOD_SHIFT | window.key.MOD_CTRL | window.key.MOD_ALT))):
-		 	self.view.camera.mouse_roll(norm_x, norm_y, dragging=False)
+			self.view.camera.mouse_roll(norm_x, norm_y, dragging=False)
 		if button == window.mouse.LEFT and modifiers & window.key.MOD_SHIFT:
 			self.view.camera.mouse_move(norm_x, norm_y, self.view.fov, dragging=False)
 		if button == window.mouse.LEFT and modifiers & window.key.MOD_CTRL:
 			self.view.camera.mouse_zoom(norm_x, norm_y, dragging=False)
+
 	def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
 		norm_x, norm_y = norm1(x, self.width), norm1(y, self.height)
 		if button == window.mouse.LEFT and (not (modifiers & (window.key.MOD_SHIFT | window.key.MOD_CTRL | window.key.MOD_ALT))):
@@ -199,18 +207,19 @@ class Window(pyglet.window.Window):
 		if button == window.mouse.LEFT and modifiers & window.key.MOD_CTRL:
 			self.view.camera.mouse_zoom(norm_x, norm_y)
 
-
 	def on_mouse_scroll(self, x, y, dx, dy):
 		# zoom implemented according to: https://www.opengl.org/archives/resources/faq/technical/viewing.htm Section 8.040
 		zoom_factor = 1.05
-		self.view.fov *= zoom_factor if dy<0 else 1/zoom_factor
+		self.view.fov *= zoom_factor if dy < 0 else 1 / zoom_factor
 		self.view.hud.update_text()
+
 
 class EventViewer():
 	def __init__(self, input_file_path):
 		self.window = Window(1200, 800, input_file_path, title='OpenGL Micromegas Event Viewer')
 		clock.set_fps_limit(60)
 		pyglet.app.run()
+
 
 if __name__ == '__main__':
 	if len(sys.argv) > 1:
