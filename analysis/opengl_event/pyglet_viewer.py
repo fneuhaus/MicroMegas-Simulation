@@ -17,4 +17,8 @@ if __name__ == '__main__':
 	if len(sys.argv) > 1:
 		EventViewer(sys.argv[1])
 	else:
-		EventViewer({})  # { 'drift': '/localscratch/micromegas/simulation/outfiles/drift_lines.root', 'avalanche': '/localscratch/micromegas/simulation/outfiles/drift_lines_avalanche.root' })
+		EventViewer({
+			'drift': '/localscratch/micromegas/simulation/outfiles/drift_lines.root',
+			'avalanche': '/localscratch/micromegas/simulation/outfiles/drift_lines_avalanche.root',
+			'mesh': '/localscratch/micromegas/simulation/avalanche/geometry/mesh.obj',
+		})

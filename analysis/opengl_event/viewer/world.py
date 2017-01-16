@@ -1,5 +1,6 @@
 from .data_io import read_data
 from .solarized import colors
+from .obj_loader import WavefrontOBJ
 import pyglet
 from pyglet.gl import *
 import numpy as np
@@ -11,8 +12,14 @@ class World():
 		self.bounding_box = [(-1, 1), (-1, 1), (0, 3)]
 		self.event_id = event_id
 		self.input_files = input_files
+		self.mesh_obj = False
 		self.init_coordinate_system(1)
 		self.init_vertex_lists()
+
+		# Load mesh if given
+		if type(self.input_files) == dict and 'mesh' in self.input_files:
+			self.mesh_obj = WavefrontOBJ(self.input_files['mesh'])
+			glShadeModel(GL_SMOOTH)
 
 	def init_vertex_lists(self):
 		if type(self.input_files) == dict:
@@ -108,5 +115,9 @@ class World():
 		glColor4f(0, 0, 0, 0.3)  # draw drift lines
 		for vertex_list in self.vertex_lists:
 			vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
+
+		# Draw mesh if available
+		if self.mesh_obj:
+			glCallList(self.mesh_obj.gl_list)
 
 		glPopMatrix()
