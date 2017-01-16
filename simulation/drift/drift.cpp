@@ -143,6 +143,7 @@ int main(int argc, char* argv[]) {
 		if eval(conf["drift"]["save_drift_lines"]):
 			cog.outl("SaveDrift* savedrift = new SaveDrift(\"{}\");".format(conf["drift"]["drift_lines_path"]))
 			cog.outl("avalanchemicroscopic->EnableSaving(savedrift);")
+			cog.outl('avalanchemicroscopic->SetSkippingFactor({});'.format(conf['drift']['drift_lines_skipping_factor']))
    ]]]*/
    //[[[end]]]
 

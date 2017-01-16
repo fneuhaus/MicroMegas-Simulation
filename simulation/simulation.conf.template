@@ -84,6 +84,7 @@
 	# save the drift lines
 	save_drift_lines = 0
 	drift_lines_path = ${general:output_path}/drift_lines.root
+	drift_lines_skipping_factor = 100
 
 	# z boundaries of the simulation (drift simulation should end about 100µm above the mesh where the field gets inhomogeneous, value from: http://iopscience.iop.org/article/10.1088/1748-0221/6/06/P06011/pdf)
 	z_max = ${particleconversion:z_cathode}
