@@ -135,9 +135,9 @@ class World():
 
 
 class View():
-	def __init__(self, window, input_file_path):
+	def __init__(self, window, world):
 		self.window = window
-		self.world = World(input_file_path)
+		self.world = world
 		self.hud = Hud(self.window, self)
 		self.camera = TrackballCamera(radius=4.)
 		self.fov = 60.
@@ -169,11 +169,11 @@ class View():
 
 
 class Window(pyglet.window.Window):
-	def __init__(self, width, height, input_file_path, title=''):
+	def __init__(self, width, height, world, title=''):
 		super().__init__(width=width, height=height, caption=title)
 		self.init_opengl()
 
-		self.view = View(self, input_file_path)
+		self.view = View(self, world)
 		# self.push_handlers(pyglet.window.event.WindowEventLogger()) # to show window events
 
 	def init_opengl(self):
@@ -216,7 +216,8 @@ class Window(pyglet.window.Window):
 
 class EventViewer():
 	def __init__(self, input_file_path):
-		self.window = Window(1200, 800, input_file_path, title='OpenGL Micromegas Event Viewer')
+		self.world = World(input_file_path)
+		self.window = Window(1200, 800, self.world, title='OpenGL Micromegas Event Viewer')
 		clock.set_fps_limit(60)
 		pyglet.app.run()
 
