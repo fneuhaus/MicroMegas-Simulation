@@ -1,6 +1,7 @@
 from .view import View
 from .trackball_camera import norm1
 import pyglet
+from pyglet.window import key
 from pyglet.gl import *
 
 
@@ -8,7 +9,7 @@ class Window(pyglet.window.Window):
 	def __init__(self, width, height, world, title=''):
 		super().__init__(width=width, height=height, caption=title)
 		self.init_opengl()
-
+		self.world = world
 		self.view = View(self, world)
 		# self.push_handlers(pyglet.window.event.WindowEventLogger()) # to show window events
 
@@ -24,6 +25,19 @@ class Window(pyglet.window.Window):
 
 	def on_resize(self, width, height):
 		self.view.update(width, height)
+
+	def on_key_press(self, symbol, modifier):
+		super().on_key_press(symbol, modifier)
+		if symbol == key.F1:
+			self.world.draw_grid ^= True
+			self.on_draw()
+		if symbol == key.F2:
+			self.world.draw_mesh ^= True
+			self.on_draw()
+		if symbol == key.F3:
+			self.world.draw_drift ^= True
+		if symbol == key.F4:
+			self.world.draw_avalanche ^= True
 
 	def on_mouse_press(self, x, y, button, modifiers):
 		norm_x, norm_y = norm1(x, self.width), norm1(y, self.height)
