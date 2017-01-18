@@ -13,15 +13,15 @@ def parse_arguments(argv):
 		help='specify the input folder (instead of individual files).')
 	parser.add_argument('--event', dest='event_id', type=int, default=1,
 		help='event id')
-	parser.add_argument('--drift', dest='drift', default='/localscratch/micromegas/simulation/outfiles/drift.root',
+	parser.add_argument('--drift', dest='drift', default=False,
 		help='specify the path for the drift file.')
-	parser.add_argument('--drift-lines', dest='drift_lines', default='/localscratch/micromegas/simulation/outfiles/drift_lines.root',
+	parser.add_argument('--drift-lines', dest='drift_lines', default=False,
 		metavar='', help='specify the file where the drift lines are stored.')
-	parser.add_argument('--avalanche', dest='avalanche', default='/localscratch/micromegas/simulation/outfiles/avalanche.root',
+	parser.add_argument('--avalanche', dest='avalanche', default=False,
 		help='specify the path for the avalanche file.')
-	parser.add_argument('--avalanche-lines', dest='avalanche_lines', default='/localscratch/micromegas/simulation/outfiles/avalanche_lines.root',
+	parser.add_argument('--avalanche-lines', dest='avalanche_lines', default=False,
 		help='specify the file were the drift lines for the avalanche are stored.')
-	parser.add_argument('--mesh', dest='mesh', default='/localscratch/micromegas/simulation/avalanche/geometry/mesh.obj',
+	parser.add_argument('--mesh', dest='mesh', default=False,
 		help='specify the file were the obj file of the mesh is stored.')
 
 	options = parser.parse_args(argv)
