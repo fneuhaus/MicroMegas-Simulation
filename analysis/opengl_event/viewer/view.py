@@ -4,13 +4,16 @@ from pyglet.gl import *
 
 
 class View():
-	def __init__(self, window, world):
+	def __init__(self, window):
 		self.window = window
-		self.world = world
+		self.objects = []
 		self.hud = Hud(self.window, self)
 		self.camera = TrackballCamera(radius=4.)
 		self.fov = 60.
 		self.hud.update_text()
+
+	def add_object(self, obj):
+		self.objects.append(obj)
 
 	def update(self, width, height):
 		glViewport(0, 0, width, height)
@@ -31,7 +34,12 @@ class View():
 	def draw(self):
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 		self.world_projection()
-		self.world.draw()
+		glMatrixMode(GL_MODELVIEW)
+		glPushMatrix()
+		glTranslatef(0, 0, -1.5)
+		for obj in self.objects:
+			obj.draw()
+		glPopMatrix()
 
 		self.hud_projection()
 		self.hud.draw()
