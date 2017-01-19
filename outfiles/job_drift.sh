@@ -5,7 +5,7 @@ if [ "$#" -ne 1 ]; then
 	exit 1
 fi
 
-WD="$1"
+WD="$(readlink -f $1)"
 
 INPUT_FILE="particleconversion.root"
 AVAL_EXEC="/home/fneuhaus/micromegas-simulation/simulation/avalanche/avalanche"
