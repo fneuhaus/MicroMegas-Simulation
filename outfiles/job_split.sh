@@ -7,8 +7,8 @@ fi
 
 WD="$1"
 
-INPUT_FILE="photoconversion.root"
-SPLIT_SCRIPT="/home/rwestenb/simulation/MicroMegas-Simulation/outfiles/scripts/splitFile.py"
+INPUT_FILE="particleconversion.root"
+SPLIT_SCRIPT="/home/fneuhaus/micromegas-simulation/outfiles/scripts/splitFile.py"
 
 echo "Using simulation directory: $WD"
 
@@ -19,9 +19,9 @@ then
 fi
 
 # ROOT setup
-source /cluster/cern/root_v5.34.03_x86_64/bin/thisroot.sh
+source /home/fneuhaus/micromegas-simulation/simulation/init.sh
 
-$SPLIT_SCRIPT -j 64 -t coatingTree $WD/$INPUT_FILE > $WD/split.log
+$SPLIT_SCRIPT -j 64 -t detectorTree $WD/$INPUT_FILE > $WD/split.log
 
 STATUS=$?
 exit $STATUS

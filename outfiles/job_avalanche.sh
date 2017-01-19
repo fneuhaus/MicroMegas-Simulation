@@ -8,7 +8,7 @@ fi
 WD="$1"
 
 INPUT_FILE="photoconversion.root"
-AVAL_EXEC="/home/rwestenb/simulation/MicroMegas-Simulation/simulation/avalanche/avalanche"
+AVAL_EXEC="/home/fneuhaus/micromegas-simulation/simulation/avalanche/avalanche"
 
 echo "Using simulation directory: $WD"
 
@@ -19,9 +19,7 @@ then
 fi
 
 # ROOT and Garfield++ setup
-source /cluster/cern/root_v5.34.03_x86_64/bin/thisroot.sh
-export GARFIELD_HOME=/home/rwestenb/simulation/software/Garfield
-export HEED_DATABASE=$GARFIELD_HOME/Heed/heed++/database
+source /home/fneuhaus/micromegas-simulation/simulation/init.sh
 
 # GNU Parallel
 module load software/gnu_parallel

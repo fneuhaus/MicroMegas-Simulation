@@ -7,8 +7,8 @@ fi
 
 WD="$1"
 
-INPUT_FILE="photoconversion.root"
-DRIFT_EXEC="/home/rwestenb/simulation/MicroMegas-Simulation/simulation/drift/drift"
+INPUT_FILE="particleconversion.root"
+AVAL_EXEC="/home/fneuhaus/micromegas-simulation/simulation/avalanche/avalanche"
 
 echo "Using simulation directory: $WD"
 
@@ -19,16 +19,14 @@ then
 fi
 
 # ROOT and Garfield++ setup
-source /cluster/cern/root_v5.34.03_x86_64/bin/thisroot.sh
-export GARFIELD_HOME=/home/rwestenb/simulation/software/Garfield
-export HEED_DATABASE=$GARFIELD_HOME/Heed/heed++/database
+source /home/fneuhaus/micromegas-simulation/simulation/init.sh
 
 # GNU Parallel
 module load software/gnu_parallel
 
 # run parallel on all split files
 # needs about 330M RAM per job
-find ${WD} -regextype posix-egrep -regex '^.*photoconversion_[0-9]+\.root$' | parallel -j 64 --delay 1 --progress --no-notice "$DRIFT_EXEC {} {.}_drift.root > {.}_drift.log"
+find ${WD} -regextype posix-egrep -regex '^.*particleconversion_[0-9]+\.root$' | parallel -j 64 --delay 1 --progress --no-notice "$DRIFT_EXEC {} {.}_drift.root > {.}_drift.log"
 
 STATUS=$?
 exit $STATUS

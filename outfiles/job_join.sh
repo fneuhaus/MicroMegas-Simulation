@@ -5,8 +5,8 @@ if [ "$#" -lt 2 ]; then
 	exit 1
 fi
 
-# ROOT setup
-source /cluster/cern/root_v5.34.03_x86_64/bin/thisroot.sh
+# ROOT and Garfield++ setup
+source /home/fneuhaus/micromegas-simulation/simulation/init.sh
 
 $ROOTSYS/bin/hadd -f $@
 

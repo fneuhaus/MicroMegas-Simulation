@@ -12,16 +12,16 @@ fi
 
 WD="$(readlink -f $1)"
 
-PHOTOCONVERSION_EXEC="/home/rwestenb/simulation/MicroMegas-Simulation/simulation/photoconversion/build/photoconversion"
+PHOTOCONVERSION_EXEC="/home/fneuhaus/micromegas-simulation/simulation/particleconversion/build/particleconversion"
 
 echo "Using simulation directory: $WD"
 
 # ROOT and Garfield++ setup
-source /cluster/cern/root_v5.34.03_x86_64/bin/thisroot.sh
+source /home/fneuhaus/micromegas-simulation/simulation/init.sh
 
 cd $(dirname "$PHOTOCONVERSION_EXEC")
 # needs about 300M ram for 100k photons
-./$(basename "$PHOTOCONVERSION_EXEC") > $WD/photoconversion.log
+./$(basename "$PHOTOCONVERSION_EXEC") > $WD/particleconversion.log
 
 STATUS=$?
 exit $STATUS
