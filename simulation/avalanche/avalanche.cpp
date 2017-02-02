@@ -156,7 +156,7 @@ int main(int argc, char * argv[]) {
 
 	/* [[[cog
 	from MMconfig import *
-	if conf['amplification']['save_drift_lines']:
+	if conf['amplification']['save_drift_lines'] == 1:
 		cog.outl('SaveDrift* savedrift = new SaveDrift("{}");'.format(conf['amplification']['drift_lines_path']))
 		cog.outl('avalanchemicroscopic->EnableSaving(savedrift);')
 		cog.outl('avalanchemicroscopic->SetSkippingFactor({});'.format(conf['amplification']['drift_lines_skipping_factor']))
@@ -166,7 +166,7 @@ int main(int argc, char * argv[]) {
 	
 	/* [[[cog
 	from MMconfig import *
-	if conf['amplification']['save_electric_field']:
+	if conf['amplification']['save_electric_field'] == 1:
 		cog.outl('''TCanvas *c1 = new TCanvas();
 	ViewField *viewfield = new ViewField();
 	viewfield->SetCanvas(c1);
@@ -230,6 +230,13 @@ int main(int argc, char * argv[]) {
 			cout << setw(5) << i/(double)numberOfEvents*100. << "% of all events done." << endl;
 			cout << setw(4) << e/(double)numberOfElectrons*100. << "% of this event done." << endl;
 		}
+		/* [[[cog
+		from MMconfig import *
+		if conf['amplification']['save_drift_lines'] == 1:
+			cog.outl('avalanchemicroscopic->SavingEndEvent();')
+		]]]*/
+		//[[[end]]]
+
 		avalanchemicroscopic->SavingEndEvent();
 		outputTree->Fill();
 		x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
@@ -242,7 +249,7 @@ int main(int argc, char * argv[]) {
 	inputFile->Close();
 	/* [[[cog
 	from MMconfig import *
-	if conf['amplification']['save_drift_lines']:
+	if conf['amplification']['save_drift_lines'] == 1:
 		cog.outl('delete savedrift;')
 	]]]*/
 	///[[[end]]]
