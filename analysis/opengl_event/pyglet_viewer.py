@@ -4,7 +4,7 @@ import sys
 import os
 import pyglet
 import argparse
-from viewer import Window, DriftLines, Mesh, Axes
+from viewer import Window, DriftLines, Mesh, Axes, EndPoints
 
 
 def parse_arguments(argv):
@@ -54,8 +54,12 @@ if __name__ == '__main__':
    options = parse_arguments(sys.argv[1:])
    viewer = EventViewer()
    viewer.add_object(Axes())
+   if options.drift:
+      viewer.add_object(EndPoints(options.drift, 'driftTree', options.event_id))
    if options.drift_lines:
       viewer.add_object(DriftLines(options.drift_lines, options.event_id))
+   if options.avalanche:
+      viewer.add_object(EndPoints(options.avalanche, 'avalancheTree', options.event_id))
    if options.avalanche_lines:
       viewer.add_object(DriftLines(options.avalanche_lines, options.event_id))
    if options.mesh:
