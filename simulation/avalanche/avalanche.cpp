@@ -237,7 +237,6 @@ int main(int argc, char * argv[]) {
 		]]]*/
 		//[[[end]]]
 
-		avalanchemicroscopic->SavingEndEvent();
 		outputTree->Fill();
 		x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
 		x1.clear(); y1.clear(); z1.clear(); e1.clear(); t1.clear();
