@@ -1,0 +1,43 @@
+#!/bin/bash
+
+WD="$(readlink -f $1)"
+
+export SIMULATION_HOME=$HOME/micromegas-simulation
+export SCRIPTS_PATH=$SIMULATION_HOME/scripts
+
+export PARTICLECONVERSION_EXEC=$SIMULATION_HOME/simulation/particleconversion/build/particleconversion
+export DRIFT_EXEC=$SIMULATION_HOME/simulation/drift/drift
+export AVALANCHE_EXEC=$SIMULATION_HOME/simulation/avalanche/avalanche
+
+# Load cmake
+module load software/cmake/3.6.3
+
+# Initialize ROOT
+export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh >/dev/null 2>&1
+lsetup "root 5.34.25-x86_64-slc6-gcc48-opt" >/dev/null 2>&1
+
+# Initialize python
+source $HOME/software/python/bin/activate
+
+# Initialize GEANT4
+# Not working on mogon yet
+
+# Initialize garfield
+export GARFIELD_HOME=$HOME/software/garfield
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GARFIELD_HOME/lib"
+export HEED_DATABASE=$GARFIELD_HOME/Heed/heed++/database
+
+# Elmer
+export ELMER_HOME=$HOME/software/elmerfem
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ELMER_HOME/lib
+export PATH=$PATH:$ELMER_HOME/bin
+
+# gmsh
+export PATH=$HOME/software/gmsh/bin:$PATH
+
+# Pythonpath
+export PYTHONPATH=$SIMULATION_HOME/simulation/:$PYTHONPATH
+
+# Path to scripts
+export PATH=$SCRIPTS_PATH:$PATH
