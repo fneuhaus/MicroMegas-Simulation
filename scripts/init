@@ -1,7 +1,5 @@
 #!/bin/bash
 
-WD="$(readlink -f $1)"
-
 export SIMULATION_HOME=$HOME/micromegas-simulation
 export SCRIPTS_PATH=$SIMULATION_HOME/scripts
 
