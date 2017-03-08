@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+	echo "Usage: $(basename $0) DIRECTORY"
+	exit 1
+fi
+
+# ROOT and Garfield++ setup
+[[ ! -e "$DRIFT_EXEC" ]] && source $(dirname `readlink -f $0`)/init
+
+WD="$(readlink -f $1)"
+
+echo "Using simulation directory: $WD"
+if [ ! -d "$WD" ]; then
+   echo "Input directory: $WD does not exist!"
+   exit 1
+fi
+
+# GNU Parallel
+module load software/gnu_parallel
+
+# run parallel on all split files
+# needs about 330M RAM per job
+find ${WD} -regextype posix-egrep -regex '^.*[0-9]+_particleconversion\.root$' | sed -nE 's|(.*)/([0-9]+)_particleconversion\.root|\1 \2|p' | parallel --colsep " " -j 64 --delay 1 --progress --no-notice "$DRIFT_EXEC {1}/{2}_particleconversion.root {1}/{2}_drift.root > {1}/{2}_drift.log"
+
+STATUS=$?
+exit $STATUS
+
