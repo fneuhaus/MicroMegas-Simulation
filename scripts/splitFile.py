@@ -69,8 +69,10 @@ def splitFile(args):
 	last_block_num = event_blocks[-1][0]
 
 	for file_num, event_nums in event_blocks:
-		input_file_base, extension = os.path.splitext(args.inputFileName)
-		output_file_name = '{}_{}{}'.format(input_file_base, str(file_num).zfill(len(str(last_block_num))), extension)
+		folder = os.path.dirname(args.inputFileName)
+		input_file_name = os.path.basename(args.inputFileName)
+		input_file_base, extension = os.path.splitext(input_file_name)
+		output_file_name = '{}/{}_{}{}'.format(folder, str(file_num).zfill(len(str(last_block_num))), input_file_base, extension)
 		output_file_names.append(output_file_name)
 		output_file = TFile(output_file_name, 'recreate')
 		output_tree = input_tree.CloneTree(0)
