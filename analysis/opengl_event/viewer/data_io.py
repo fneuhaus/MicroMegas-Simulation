@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import ROOT
+ROOT.PyConfig.IgnoreCommandLineOptions = True
 from root_numpy import tree2array
 
 def read_data(input_file_path, tree_name, event=1):
