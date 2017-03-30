@@ -10,7 +10,7 @@ class Window(pyglet.window.Window):
       super().__init__(width=width, height=height, caption=title)
       self.event_id = event_id
       self.init_opengl()
-      self.view = View(self)
+      self.view = View(self, event_id)
       self.keys = key.KeyStateHandler()
       self.push_handlers(self.keys)
       # self.push_handlers(pyglet.window.event.WindowEventLogger()) # to show window events

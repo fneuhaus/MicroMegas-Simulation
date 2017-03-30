@@ -3,9 +3,10 @@ from pyglet.gl import *
 
 
 class Hud():
-   def __init__(self, window, view):
+   def __init__(self, window, view, event_id):
       self.window = window
       self.view = view
+      self.event_id = event_id
       self.font = font.load('Helvetica', 10)
       self.fps = clock.ClockDisplay(font=self.font, interval=0.2, color=(0, 0, 0, 1))
 
@@ -16,7 +17,7 @@ class Hud():
 
    def update_text(self, text=None):
       if not text:
-         text = 'FOV: {:.3}'.format(self.view.fov)
+         text = 'FOV: {:.3}, Event: {}'.format(self.view.fov, self.event_id)
       props = dict(x=self.window.width - 10, y=10, halign=font.Text.RIGHT, valign=font.Text.BOTTOM, color=(0, 0, 0, 0.5))
       self.text = font.Text(self.font, text, **props)
 

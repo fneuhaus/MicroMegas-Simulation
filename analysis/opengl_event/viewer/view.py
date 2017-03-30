@@ -5,10 +5,10 @@ from pyglet.gl import *
 
 
 class View():
-   def __init__(self, window):
+   def __init__(self, window, event_id):
       self.window = window
       self.objects = []
-      self.hud = Hud(self.window, self)
+      self.hud = Hud(self.window, self, event_id)
       self.camera = TrackballCamera(radius=4.)
       self.fov = 60.
       self.hud.update_text()
@@ -21,6 +21,8 @@ class View():
       for obj in self.objects:
          if type(obj) == EndPoints: 
             obj.init_endpoint_list(event_id)
+      self.hud.event_id = event_id
+      self.hud.update()
       self.draw()
 
    def update(self, width, height):
