@@ -46,7 +46,7 @@ class View():
       self.world_projection()
       glMatrixMode(GL_MODELVIEW)
       glPushMatrix()
-      glTranslatef(0, 0, -1.5)
+      glTranslatef(0, 0, -0.1)
       for obj in self.objects:
          obj.draw()
       glPopMatrix()
