@@ -1,5 +1,6 @@
 from .hud import Hud
 from .trackball_camera import TrackballCamera, norm1
+from .endpoints import EndPoints
 from pyglet.gl import *
 
 
@@ -14,6 +15,13 @@ class View():
 
    def add_object(self, obj):
       self.objects.append(obj)
+
+   def show_event(self, event_id):
+      # For now only updating endpoints
+      for obj in self.objects:
+         if type(obj) == EndPoints: 
+            obj.init_endpoint_list(event_id)
+      self.draw()
 
    def update(self, width, height):
       glViewport(0, 0, width, height)

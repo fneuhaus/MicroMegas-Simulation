@@ -39,8 +39,9 @@ def parse_arguments(argv):
 
 
 class EventViewer():
-   def __init__(self):
-      self.window = Window(1200, 800, title='OpenGL Micromegas Event Viewer')
+   def __init__(self, event_id):
+      self.event_id = event_id
+      self.window = Window(1200, 800, title='OpenGL Micromegas Event Viewer', event_id=event_id)
 
    def add_object(self, obj):
       self.window.view.add_object(obj)
@@ -52,7 +53,7 @@ class EventViewer():
 
 if __name__ == '__main__':
    options = parse_arguments(sys.argv[1:])
-   viewer = EventViewer()
+   viewer = EventViewer(options.event_id)
    viewer.add_object(Axes())
    if options.drift:
       viewer.add_object(EndPoints(options.drift, 'driftTree', options.event_id))
