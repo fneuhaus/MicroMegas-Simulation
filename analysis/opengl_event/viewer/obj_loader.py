@@ -3,7 +3,9 @@ from pyglet.gl import *
 
 
 class WavefrontOBJ:
-   def __init__(self, filename, swapyz=False, color=(0.000, 0.169, 0.212)):
+   def __init__(self, filename, swapyz=False, color=(0.000, 0.169, 0.212), scale_factor=1.):
+      self.scale_factor = scale_factor
+
       """Loads a Wavefront OBJ file. """
       self.vertices = []
       self.normals = []
@@ -19,17 +21,17 @@ class WavefrontOBJ:
             continue
 
          if values[0] == 'v':
-            v = list(map(float, values[1:4]))
+            v = list(map(self.scale, values[1:4]))
             if swapyz:
                v = v[0], v[2], v[1]
             self.vertices.append(v)
          elif values[0] == 'vn':
-            v = list(map(float, values[1:4]))
+            v = list(map(self.scale, values[1:4]))
             if swapyz:
                v = v[0], v[2], v[1]
             self.normals.append(v)
          elif values[0] == 'vt':
-            self.texcoords.append(list(map(float, values[1:3])))
+            self.texcoords.append(list(map(self.scale, values[1:3])))
          elif values[0] == 'f':
             face = []
             texcoords = []
@@ -68,3 +70,6 @@ class WavefrontOBJ:
          glEnd()
       glDisable(GL_TEXTURE_2D)
       glEndList()
+
+   def scale(self, value):
+      return self.scale_factor * float(value)

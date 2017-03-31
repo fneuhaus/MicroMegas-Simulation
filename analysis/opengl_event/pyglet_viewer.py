@@ -23,6 +23,8 @@ def parse_arguments(argv):
       help='specify the file were the drift lines for the avalanche are stored.')
    parser.add_argument('--mesh', dest='mesh', default=False,
       help='specify the file were the obj file of the mesh is stored.')
+   parser.add_argument('--mesh-scale-factor', dest='mesh_scale_factor', type=float, default=1.,
+      help='scale the loaded mesh by this factor.')
 
    options = parser.parse_args(argv)
 
@@ -64,5 +66,5 @@ if __name__ == '__main__':
    if options.avalanche_lines:
       viewer.add_object(DriftLines(options.avalanche_lines, options.event_id))
    if options.mesh:
-      viewer.add_object(Mesh(options.mesh))
+      viewer.add_object(Mesh(options.mesh, options.mesh_scale_factor))
    viewer.run()
