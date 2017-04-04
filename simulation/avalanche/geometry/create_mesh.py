@@ -127,7 +127,7 @@ class MeshGenerator(QtGui.QWidget):
 
       mesh = FreeCAD.activeDocument().addObject("Part::MultiFuse","Mesh")
       mesh.Shapes = wires["x"] + wires["y"]
-      mesh.Placement.Base = FreeCAD.Vector(-2.*mesh_lattice_const, -2.*mesh_lattice_const, 0) # translate mesh to origin
+      mesh.Placement.Base = FreeCAD.Vector(-2. * mesh_lattice_const * num_blocks, -2. * mesh_lattice_const * num_blocks, 0) # translate mesh to origin
 
       if not mesh_only:
          gas_box = FreeCAD.activeDocument().addObject("Part::Box","Gas")
