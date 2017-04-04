@@ -3,6 +3,7 @@ from .trackball_camera import norm1
 import pyglet
 from pyglet.window import key
 from pyglet.gl import *
+import numpy as np
 
 
 class Window(pyglet.window.Window):
@@ -35,6 +36,19 @@ class Window(pyglet.window.Window):
          object_id = symbol - key.F1
          if object_id < len(self.view.objects):
             self.view.objects[object_id].show ^= True
+      if key._1 <= symbol <= key._3:
+         self.view.camera.cam_eye = np.array([0., 0., self.view.camera.radius])
+         self.view.camera.cam_focus = np.array([0., 0., 0.])
+         self.view.camera.cam_up = np.array([0., 1., 0.])
+         if symbol == key._1:
+            self.view.camera.rot_quat = np.array([0, 0, 0, 1])
+            self.view.camera.update_modelview()
+         if symbol == key._2:
+            self.view.camera.rot_quat = np.array([np.sqrt(0.5), 0, 0, np.sqrt(0.5)])
+            self.view.camera.update_modelview()
+         if symbol == key._3:
+            self.view.camera.rot_quat = np.array([0.5, 0.5, 0.5, 0.5])
+            self.view.camera.update_modelview()
 
    def on_text_motion(self, motion):
       if motion == key.LEFT:
