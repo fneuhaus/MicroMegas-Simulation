@@ -49,9 +49,17 @@ class Axes():
       # x-y grid
       glColor3f(*colors['base1'])
       for x in np.arange(self.bounding_box[0][0], self.bounding_box[0][1] + step_size, step_size):
+         if round(x, 2) % 0.5 == 0:
+            glColor3f(*colors['orange'])
          glVertex3f(x, self.bounding_box[1][0], 0); glVertex3f(x, self.bounding_box[1][1], 0)
+         if round(x, 2) % 0.5 == 0:
+            glColor3f(*colors['base1'])
       for y in np.arange(self.bounding_box[1][0], self.bounding_box[1][1] + step_size, step_size):
+         if round(y, 2) % 0.5 == 0:
+            glColor3f(*colors['orange'])
          glVertex3f(self.bounding_box[0][0], y, 0); glVertex3f(self.bounding_box[0][1], y, 0)
+         if round(y, 2) % 0.5 == 0:
+            glColor3f(*colors['base1'])
       glEnd()
       glPopMatrix()
       glEndList()

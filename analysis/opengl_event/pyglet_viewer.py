@@ -5,9 +5,18 @@ import os
 import pyglet
 import argparse
 from viewer import Window, DriftLines, Mesh, Axes, EndPoints
+import re
 
 
 def parse_arguments(argv):
+   def bounding_box(s):
+      try:
+         match = re.match('\[\(([0-9\.\-]+,[0-9\.\-]+)\),\(([0-9\.\-]+,[0-9\.\-]+)\),\(([0-9\.\-]+,[0-9\.\-]+)\)', s.replace(' ', ''))
+         if match:
+            return list(map(lambda x: tuple(map(float, x.split(','))), match.groups()))
+      except:
+         raise argparse.ArgumentTypeError(msg)
+
    parser = argparse.ArgumentParser(description='OpenGL viewer for events.')
    parser.add_argument('-f', '--folder', dest='folder', action='store', default=False, metavar='',
       help='specify the input folder (instead of individual files).')
@@ -25,6 +34,8 @@ def parse_arguments(argv):
       help='specify the file were the obj file of the mesh is stored.')
    parser.add_argument('--mesh-scale-factor', dest='mesh_scale_factor', type=float, default=1.,
       help='scale the loaded mesh by this factor.')
+   parser.add_argument('--bounding-box', type=bounding_box, default=[(-1, 1), (-1, 1), (0, 3)],
+      help='bounding box for drawing the bounding box (includes the grid).')
 
    options = parser.parse_args(argv)
 
@@ -56,7 +67,7 @@ class EventViewer():
 if __name__ == '__main__':
    options = parse_arguments(sys.argv[1:])
    viewer = EventViewer(options.event_id)
-   viewer.add_object(Axes())
+   viewer.add_object(Axes(options.bounding_box))
    if options.drift:
       viewer.add_object(EndPoints(options.drift, 'driftTree', options.event_id))
    if options.drift_lines:
