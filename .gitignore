@@ -9,6 +9,7 @@ simulation/particleconversion/particleconversion
 simulation/avalanche/avalanche
 simulation/drift/drift
 simulation/outfiles/
+simulation/runs/
 .clang_complete
 simulation/avalanche/geometry/geometry/elec.0001.vtu
 simulation/avalanche/geometry/*.obj
