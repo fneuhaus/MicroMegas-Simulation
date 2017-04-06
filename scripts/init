@@ -1,7 +1,11 @@
 #!/bin/bash
-
-export SIMULATION_HOME=$HOME/micromegas-simulation
+export SIMULATION_HOME=$HOME/micromegas
 export SCRIPTS_PATH=$SIMULATION_HOME/scripts
+export MICROMEGAS_SCRIPTS_PATH=$SIMULATION_HOME/scripts
+export MICROMEGAS_SIMULATION_PATH="$SIMULATION_HOME/simulation"
+export MICROMEGAS_OUTPUT_PATH="/etapfs05/atlashpc/fneuhaus/micromegas"
+export MICROMEGAS_RUN_PATH="$SIMULATION_HOME/simulation/runs/"
+
 
 export PARTICLECONVERSION_EXEC=$SIMULATION_HOME/simulation/particleconversion/build/particleconversion
 export DRIFT_EXEC=$SIMULATION_HOME/simulation/drift/drift
@@ -35,7 +39,7 @@ export PATH=$PATH:$ELMER_HOME/bin
 export PATH=$HOME/software/gmsh/bin:$PATH
 
 # Pythonpath
-export PYTHONPATH=$SIMULATION_HOME/simulation/:$PYTHONPATH
+export PYTHONPATH=$MICROMEGAS_SIMULATION_HOME:$PYTHONPATH
 
 # Path to scripts
 export PATH=$SCRIPTS_PATH:$PATH
