@@ -6,8 +6,8 @@ if [ "$#" -ne 1 ]; then
 fi
 
 if [ ! -e "$1" ]; then
-	echo "Directory $1 does not exist, creating..."
-	mkdir "$1"
+   echo "Directory $1 does not exist, creating..."
+   mkdir "$1"
 fi
 
 # ROOT and Garfield++ setup

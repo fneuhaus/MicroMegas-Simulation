@@ -1,0 +1,367 @@
+#!/usr/bin/env python3
+import os
+import sys
+from shutil import copy2, copytree, rmtree
+import argparse
+import tempfile
+import re
+import glob
+from datetime import datetime
+from subprocess import call, check_output, CalledProcessError, STDOUT, DEVNULL
+import pickle
+
+
+class Run:
+   def __init__(self, id, name, message='', commit='', run_path='', output_path='', created_at=None):
+      self.id = id
+      self.name = name
+      self.message =message
+      self.commit = commit
+      self.run_path = run_path
+      self.output_path = output_path
+      self.created_at = created_at if created_at else datetime.now()
+
+   def get_id(self):
+      return '{:0>4}'.format(self.id)
+
+
+def run_list(s):
+   """ Parse the input string for job numbers.
+
+   The parsing supports the following syntaxes:
+      - a single integer (e.g. '1')
+      - a range (e.g. '1-4')
+      - a list (e.g. '[1-3, 6, 11]')
+   """
+   # Just an integer
+   if re.match('^[0-9]*$', s):
+      return [ int(s) ]
+
+   # Range of runs
+   if re.match('^[0-9]*\-[0-9]*', s):
+      run_low, run_high = s.split('-')
+      if run_low > run_high:
+         raise argparse.ArgumentTypeError('List range of jobs in ascending order. (e.g. 1-8 not 8-1)')
+      return list(range(int(run_low), int(run_high) + 1))
+
+   # List of runs
+   if s.startswith('[') and s.endswith(']'):
+      jobs = []
+      s = s[1:-1].replace(' ', '')
+      for item in s.split(','):
+         if re.match('^[0-9]*\-[0-9]*', item):
+            run_low, run_high = item.split('-')
+            if run_low > run_high:
+               raise argparse.ArgumentTypeError('List range of jobs in ascending order. (e.g. 1-8 not 8-1)')
+            jobs += list(range(int(run_low), int(run_high) + 1))
+         else:
+            jobs.append(int(item))
+      return jobs
+
+   raise argparse.ArgumentTypeError
+
+
+class RunManager:
+   def __init__(self, argv):
+      # Load environment variables
+      self.simulation_home = os.environ.get('MICROMEGAS_HOME', '')
+      self.simulation_path = os.environ.get('MICROMEGAS_SIMULATION_PATH', '')
+      self.run_path = os.environ.get('MICROMEGAS_RUN_PATH', '')
+      self.output_path = os.environ.get('MICROMEGAS_OUTPUT_PATH', '')
+      self.scripts_path = os.environ.get('MICROMEGAS_SCRIPTS_PATH', '')
+      self.editor = os.environ.get('EDITOR', 'vim')
+
+      # Check if all paths exist
+      if not os.path.isdir(self.simulation_home):
+         print('The path to the micromegas directory is not set (MICROMEGAS_PATH) or does not exist.')
+         exit(1)
+      if not os.path.isdir(self.simulation_path):
+         print('The path to the simulation directory is not set (MICROMEGAS_SIMULATION_PATH) or does not exist.')
+         exit(1)
+      if not os.path.isdir(self.run_path):
+         print('The path to the run directory is not set (MICROMEGAS_RUN_PATH) or does not exist.')
+         exit(1)
+      if not os.path.isdir(self.output_path):
+         print('The path to the output directory is not set (MICROMEGAS_OUTPUT_PATH) or does not exist.')
+         exit(1)
+      if not os.path.isdir(self.scripts_path):
+         print('The path to the scripts directory is not set (MICROMEGAS_SCRIPTS_PATH) or does not exist.')
+         exit(1)
+
+      # Load runlog
+      self.__load_log()
+
+      # Parse arguments and execute given action
+      parser = argparse.ArgumentParser(
+         description='Create run configurations for the simulation on mogon.',
+         usage='''run_manager <command> [<args>]
+
+         The most commonly used commands are:
+         create     Create a new run configuration from the current code
+      ''')
+      parser.add_argument('command', help='Subcommand to run')
+      args = parser.parse_args(argv[1:2])
+      if not hasattr(self, args.command):
+         print('Command `{}` is not known.'.format(args.command))
+         parser.print_help()
+         exit(1)
+      getattr(self, args.command)(argv[2:])
+
+   def __load_log(self, logfile_path=None):
+      if not logfile_path:
+         logfile_path = os.path.join(self.run_path, 'runs.pkl')
+      if not os.path.isfile(logfile_path):
+         self.runs = {}
+         self.__write_log()
+         print('No runlog exists. Creating an empty one.')
+         return
+
+      with open(logfile_path, 'rb') as f:
+         self.runs = pickle.load(f)
+
+   def __write_log(self, logfile_path=None):
+      if not logfile_path:
+         logfile_path = os.path.join(self.run_path, 'runs.pkl')
+      with open(logfile_path, 'wb') as f:
+         pickle.dump(self.runs, f)
+
+   def __next_run_id(self):
+      if self.runs:
+         return list(self.runs.keys())[-1] + 1
+
+      return 1
+
+   def __git_get_current_commit(self):
+      """ Get the current git commit hash and message. """
+      try:
+         commit_hash = check_output(['git', '--no-pager', 'show', '-s', '--oneline']).decode('utf-8').strip()
+      except CalledProcessError:
+         print('Error: Could not determine current commit hash/message.')
+         exit(1)
+      return commit_hash
+
+   def __show_editor(self, text=''):
+      """ Open the specified EDITOR to make interactive input of multiple lines easier (as git does). """
+      with tempfile.NamedTemporaryFile(suffix='.tmp') as tf:
+         if text:
+            text = '\n\n' + '\n'.join([ '# ' + t for t in text.split('\n') ])
+            tf.write(text.encode('utf-8'))
+            tf.flush()
+         call([ self.editor, tf.name ])
+         tf.seek(0)
+         result = tf.read().decode('utf-8')
+         result = '\n'.join([ line for line in result.split('\n') if not line.startswith('#') ]).strip()
+         return result if result else False
+
+   def create(self, argv):
+      """ Create a new run.
+
+      This will created the new run in the log, compile the source, copy it to the run folder and clean the source folder.
+      """
+      parser = argparse.ArgumentParser(
+         description='Create a new run configuration based on the current simulation.conf and code.'
+      )
+      parser.add_argument('name', help='Name for the run.')
+      parser.add_argument('--id', default=None, type=int,
+         help='Give a custom ID for the run (not recommended).')
+      parser.add_argument('-m', '--message', default=None,
+         help='Description for the new run.')
+      parser.add_argument('--particleconversion', default=None,
+         help='Use this file as input from particleconversion.')
+      args = parser.parse_args(argv)
+
+      # If no description is given ask for one interactively
+      if not args.message:
+         args.message = self.__show_editor(
+            'Enter a description for this run.\nAn empty file will abort the operation.')
+      # Abort if the message is still empty
+      if not args.message:
+         print('The description is left empty so no new run is created.')
+         exit(1)
+
+      # Check particleconversion input file
+      if args.particleconversion:
+         if not os.path.isfile(args.particleconversion):
+            print('The input file for the particleconversion does not exist. Stop here.')
+            exit(1)
+
+      # Create a new run
+      run = Run(id=self.__next_run_id(), name=args.name, message=args.message)
+      run.commit = self.__git_get_current_commit()
+      run.run_path = os.path.join(self.run_path, 'run{}'.format(run.get_id()))
+      run.output_path = os.path.join(self.output_path, 'run{}'.format(run.get_id()))
+
+      # Check if run or output path exists (if so stop, because somethings wrong then...)
+      if os.path.exists(run.run_path):
+         print('The run path already exists. This means something is wrong -> stopping here.')
+         exit(1)
+      if os.path.exists(run.output_path):
+         print('The output path already exists. This means something is wrong -> stopping here.')
+         exit(1)
+
+      # Create the folders
+      os.mkdir(run.run_path)
+      os.mkdir(run.output_path)
+
+      # Make the project
+      logfile_path = os.path.join(run.run_path, 'make.log')
+      print('Building source...')
+      build_result = call(os.path.join(self.simulation_path, 'build.sh'),
+            shell=True, stdout=open(logfile_path, 'w'), stderr=STDOUT)
+      if build_result:
+         print('An error occured when compiling. The build script exited with {}.'.format(build_result))
+         print('See {} for more details.'.format(logfile_path))
+         exit(1)
+      print('Building successfully executed.')
+
+      # Copy the generated executables and mesh files to the run folder
+      copy2(os.path.join(self.simulation_path, 'drift', 'drift'), os.path.join(run.run_path, 'drift'))
+      copy2(os.path.join(self.simulation_path, 'avalanche', 'avalanche'), os.path.join(run.run_path, 'avalanche'))
+      copytree(os.path.join(self.simulation_path, 'avalanche', 'geometry'), os.path.join(run.run_path, 'geometry'))
+
+      # Copy the simulation.conf to be able to tell the parameters later
+      copy2(os.path.join(self.simulation_path, 'simulation.conf'), os.path.join(run.run_path, 'simulation.conf'))
+
+      # Clean the source directory
+      print('Cleaning source...')
+      if call(os.path.join(self.simulation_path, 'clear.sh'), shell=True, stdout=DEVNULL, stderr=DEVNULL):
+         print('A problem was detected while cleaning the source. Exiting now.')
+         exit(1)
+      print('Clean successfully executed.')
+
+      # Copy particleconversion input file
+      if args.particleconversion:
+         copy2(args.particleconversion, run.output_path)
+         print('Copied {} as particleconversion input file.'.format(args.particleconversion))
+
+      # Add entry to runlog and save it
+      self.runs[run.id] = run
+      self.__write_log()
+      print('A new run configuration with id {} was successfully created!'.format(run.id))
+
+   def ls(self, argv):
+      if not self.runs:
+         print('There are no runs listed yet.')
+         exit(0)
+
+      print('     Created     |  ID  |         Name         |                Description             ')
+      print('-----------------|------|----------------------|----------------------------------------')
+      for run_id, run in self.runs.items():
+         print('{:%Y-%m-%d %H:%M} | {:0>4} | {: <20} | {: <40}'.format(run.created_at, run.id, run.name[:20], run.message[:40]))
+
+   def details(self, argv):
+      parser = argparse.ArgumentParser(
+         description='Show detailed information about the specified run.'
+      )
+      parser.add_argument('id', help='ID of the run.', type=int)
+      args = parser.parse_args(argv)
+
+      if not self.runs:
+         print('There are no runs in the log, therefore no information can be shown.')
+         exit(1)
+
+      if args.id not in self.runs:
+         print('There is no run with id={}'.format(args.id))
+         exit(1)
+      run = self.runs[args.id]
+
+      def print_prop(name, value, format_string=''):
+         print(('\033[34m{: <15}:\033[m {' + format_string + '}').format(name, value))
+      print_prop('ID:', run.id)
+      print_prop('Name:', run.name)
+      print_prop('Message:', run.message)
+      print_prop('Commit:', run.commit)
+      print_prop('Run path:', run.run_path)
+      print_prop('Output path:', run.output_path)
+      print_prop('Created at', run.created_at, format_string=':%Y-%m-%d %H:%M')
+
+   def run(self, argv):
+      """ Run the specified jobs.  """
+      parser = argparse.ArgumentParser(
+         description='Submit the jobs for the specified job(s).'
+      )
+
+      parser.add_argument('step', choices=( 'drift', 'avalanche' ), help='Which simulation step to run.')
+      parser.add_argument('runs', help='ID of the run(s). Supported formats: "1", "1-3", "[ 1, 5-9 ]"', type=run_list)
+      parser.add_argument('-n', '--cores', type=int, choices=range(1, 65), metavar='[1-64]', default=64,
+            help='Number of cores per job.')
+      parser.add_argument('--resplit', action='store_true', help='Force resplitting the files (may delete files).')
+      parser.add_argument('-q', '--queue', default='atlasnodeshort', help='Specify which queue to use.')
+      parser.add_argument('-t', '--time', type=int, help='Time limit for each job in minutes.', default=120)
+      parser.add_argument('-m', '--memory', default='Reserve500M', help='Memory usage for each thread.')
+
+      args = parser.parse_args(argv)
+
+      # Check if jobs exist
+      for run_id in args.runs:
+         if run_id not in self.runs:
+            print('There is no run with ID={}'.format(run_id))
+            exit(1)
+
+      for run in [ self.runs[run_id] for run_id in args.runs ]:
+         # Split the input file before executing the code
+         if args.step == 'drift':
+            if args.resplit:
+               response = input('Are you shure you want to delete the output files in {}? [Y/n]'.format(run.output_path))
+               if response.lower() == 'y' or response == '':
+                  for f in glob.glob(os.path.join(run.output_path, '[0-9]*_particleconversion.root')):
+                     os.remove(f)
+               else:
+                  print('Permission to delete files not given. Exiting now.')
+                  exit(1)
+            if not glob.glob(os.path.join(run.output_path, '[0-9]*_particleconversion.root')):
+               try:
+                  check_output('{} "{}"'.format(os.path.join(self.scripts_path, 'job_split'), run.output_path), shell=True)
+               except CalledProcessError as e:
+                  print('An error occured while splitting the file.')
+                  print(e)
+                  exit(1)
+
+         # Submit the job with given parameters
+         try:
+            command = 'bsub -q {args.queue} -n {args.cores} -W {args.time} -R "span[ptile={args.cores}]" -app Reserve500M -J {args.step[0]}{run.id:0>4} {scripts_path}/job_{args.step} {run.output_path} {run.run_path}'.format(
+                  args=args, run=run, scripts_path=self.scripts_path)
+            # print(command)
+            check_output(command, shell=True)
+         except CalledProcessError as e:
+            print('An error occured submitting the job.')
+            print(e)
+            exit(1)
+
+   def remove(self, argv):
+      """ Remove one or more run configurations (and possibly also the generated output files.) """
+      parser = argparse.ArgumentParser(
+         description='Remove one or more run configurations (and possibly also the generated output files.)'
+      )
+
+      parser.add_argument('runs', help='ID of the run(s). Supported formats: "1", "1-3", "[ 1, 5-9 ]"', type=run_list)
+      parser.add_argument('-f', '--force', action='store_true', help='Delete output and run folder without confirmation!')
+
+      args = parser.parse_args(argv)
+
+      # Check if jobs exist
+      for run_id in args.runs:
+         if run_id not in self.runs:
+            print('There is no run with ID={}'.format(run_id))
+            exit(1)
+
+      for run in [ self.runs[run_id] for run_id in args.runs ]:
+         if not args.force:
+            print('Deleting run {}'.format(run.id))
+            print('The following folders will be deleted if you continue:')
+            print(run.output_path)
+            print(run.run_path)
+
+            if input('Are you shure you want to delete the following files? [y/n]').lower() == 'y':
+               rmtree(run.output_path)
+               rmtree(run.run_path)
+               self.runs.pop(run.id)
+            else:
+               print('Deletion of run {} skipped.'.format(run.id))
+         print('---------------------------------------------------------------------')
+
+      self.__write_log()
+
+if __name__ == '__main__':
+   rm = RunManager(sys.argv)
+

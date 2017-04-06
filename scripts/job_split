@@ -5,6 +5,9 @@ if [ "$#" -ne 1 ]; then
    exit 1
 fi
 
+# ROOT and Garfield++ setup
+[[ ! -e "$DRIFT_EXEC" ]] && source $(dirname `readlink -f $0`)/init
+
 WD="$1"
 
 INPUT_FILE="particleconversion.root"

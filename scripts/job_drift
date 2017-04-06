@@ -1,14 +1,19 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
-	echo "Usage: $(basename $0) DIRECTORY"
-	exit 1
+if [ "$#" -ne 1 ] && [ "$#" -ne 2 ]; then
+   echo "Usage: $(basename $0) DATA_DIRECTORY (RUN_DIRECTORY)"
+   exit 1
 fi
 
 # ROOT and Garfield++ setup
 [[ ! -e "$DRIFT_EXEC" ]] && source $(dirname `readlink -f $0`)/init
 
 WD="$(readlink -f $1)"
+if [ "$#" -eq 2 ]; then
+   echo $2
+   cd $2
+   export DRIFT_EXEC="$2/drift"
+fi
 
 echo "Using simulation directory: $WD"
 if [ ! -d "$WD" ]; then

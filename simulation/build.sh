@@ -3,13 +3,16 @@
 project_path=$(dirname $0)
 project_path=$(readlink -e $project_path)
 export PYTHONPATH="${PYTHONPATH}:$project_path"
-echo $PYTHONPATH
 
-echo "Building particleconversion..."
-cd "$project_path/particleconversion"
-mkdir -p "build" && cd "build"
-cmake -DCMAKE_INSTALL_PREFIX=.. ..
-make
+if [[ "$1" == "particleconversion" ]]; then
+   echo "$1"
+   echo "Building particleconversion..."
+   cd "$project_path/particleconversion"
+   mkdir -p "build" && cd "build"
+   cmake -DCMAKE_INSTALL_PREFIX=.. ..
+   make recog
+   make
+fi
 
 echo "Building drift..."
 cd "$project_path/drift"
