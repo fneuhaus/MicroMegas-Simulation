@@ -231,7 +231,7 @@ class RunManager:
 
       # Copy particleconversion input file
       if args.particleconversion:
-         copy2(args.particleconversion, run.output_path)
+         copy2(args.particleconversion, os.path.join(run.output_path, 'particleconversion.root'))
          print('Copied {} as particleconversion input file.'.format(args.particleconversion))
 
       # Add entry to runlog and save it
