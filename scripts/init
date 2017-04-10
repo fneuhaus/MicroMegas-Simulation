@@ -22,8 +22,15 @@ lsetup "root 5.34.25-x86_64-slc6-gcc48-opt" >/dev/null 2>&1
 # Initialize python
 source $HOME/software/python/bin/activate
 
+# Initialize GCC
+module load gcc/4.8.5
+export CC=$(which gcc)
+export CXX=$(which g++)
+
 # Initialize GEANT4
-# Not working on mogon yet
+pushd $HOME/software/geant4.10.03.p01/bin/ > /dev/null
+source geant4.sh
+popd > /dev/null
 
 # Initialize garfield
 export GARFIELD_HOME=$HOME/software/garfield
@@ -39,7 +46,7 @@ export PATH=$PATH:$ELMER_HOME/bin
 export PATH=$HOME/software/gmsh/bin:$PATH
 
 # Pythonpath
-export PYTHONPATH=$MICROMEGAS_SIMULATION_HOME:$PYTHONPATH
+export PYTHONPATH=$MICROMEGAS_SIMULATION_PATH:$PYTHONPATH
 
 # Path to scripts
 export PATH=$SCRIPTS_PATH:$PATH
