@@ -24,7 +24,15 @@
  * @return Status code
  */
 int main(int argc, char** argv) {
-	//TODO: Implementing command line parameters
+	TString outputfileName;
+	if (argc == 2) {
+		G4cout << "Using command line parameters as out file: ";
+		outputfileName = argv[1];
+		G4cout << outputfileName << G4endl;
+	} else {
+      //[[[cog from MMconfig import *; import os; cog.outl("outputfileName = \"{}\";".format(conf["particleconversion"]["out_filename"])) ]]]
+      //[[[end]]]
+   }
 	//TODO: Implementing return code
 
 	// Choose the Random engine
@@ -43,7 +51,7 @@ int main(int argc, char** argv) {
 	runManager->SetUserInitialization(detectorConstruction);
 
 	// User action initialization
-	runManager->SetUserInitialization(new ActionInitialization(detectorConstruction));
+	runManager->SetUserInitialization(new ActionInitialization(detectorConstruction, outputfileName));
 	
 	// Initialize visualization
 	G4VisManager* visManager = new G4VisExecutive;

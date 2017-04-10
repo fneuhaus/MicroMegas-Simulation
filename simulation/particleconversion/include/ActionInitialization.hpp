@@ -4,13 +4,14 @@
 #include "G4VUserActionInitialization.hh"
 
 #include "DetectorConstruction.hpp"
+#include <TString.h>
 
 /**
  * @brief This class is responsible for creating the action.
  */
 class ActionInitialization : public G4VUserActionInitialization {
 	public:
-		ActionInitialization(DetectorConstruction*);
+		ActionInitialization(DetectorConstruction*, TString);
 		virtual ~ActionInitialization();
 
 		virtual void BuildForMaster() const;
@@ -18,6 +19,7 @@ class ActionInitialization : public G4VUserActionInitialization {
 
 	private:
 		DetectorConstruction* fDetector;
+      TString fOutputfileName;
 };
 
 #endif

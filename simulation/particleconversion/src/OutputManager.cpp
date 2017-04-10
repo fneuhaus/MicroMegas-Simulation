@@ -7,9 +7,10 @@
 
 #include <TFile.h>
 #include <TTree.h>
+#include <TString.h>
 
-OutputManager::OutputManager() 
-	: fRootFile(0), fEventID(0), fPhiVertex(0), fPhi(0), fThetaVertex(0), fTheta(0), fT(0), fEkinVertex(0), fEkin(0), fEloss(0), fZVertex(0), fTrackLength(0), fPx(0), fPy(0), fPz(0), fPosX(0), fPosY(0), fPosZ(0) { 
+OutputManager::OutputManager(TString outputfileName) 
+	: fRootFile(0), fEventID(0), fPhiVertex(0), fPhi(0), fThetaVertex(0), fTheta(0), fT(0), fEkinVertex(0), fEkin(0), fEloss(0), fZVertex(0), fTrackLength(0), fPx(0), fPy(0), fPz(0), fPosX(0), fPosY(0), fPosZ(0), fOutputfileName(outputfileName) { 
 }
 
 OutputManager::~OutputManager() {
@@ -19,9 +20,7 @@ OutputManager::~OutputManager() {
 }
 
 void OutputManager::Initialize() {
-	//[[[cog from MMconfig import *; import os; cog.outl("G4String fileName = \"{}\";".format(conf["particleconversion"]["out_filename"])) ]]]
-	//[[[end]]]
-	fRootFile = new TFile(fileName, "RECREATE");
+	fRootFile = new TFile(fOutputfileName, "RECREATE");
 
 	if (!fRootFile) {
 		G4cout << "OutputManager::Initialize: Problem creating the ROOT TFile" << G4endl;
@@ -44,7 +43,7 @@ void OutputManager::Initialize() {
 	fDetectorTree->Branch("Pz", &fPz, "Pz/D"); // z momentum
 	fDetectorTree->Branch("t", &fT, "t/D"); // time
 
-	G4cout << "\n----> Output file is: " << fileName << G4endl;
+	G4cout << "\n----> Output file is: " << fOutputfileName << G4endl;
 }
 
 void OutputManager::Save() { 

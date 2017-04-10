@@ -5,8 +5,10 @@
 #include "RunAction.hpp"
 #include "EventAction.hpp"
 #include "SteppingAction.hpp"
+#include <TString.h>
 
-ActionInitialization::ActionInitialization(DetectorConstruction* detector) : G4VUserActionInitialization(), fDetector(detector) {
+ActionInitialization::ActionInitialization(DetectorConstruction* detector, TString outputfileName)
+   : G4VUserActionInitialization(), fDetector(detector), fOutputfileName(outputfileName) {
 }
 
 ActionInitialization::~ActionInitialization() {}
@@ -15,7 +17,7 @@ ActionInitialization::~ActionInitialization() {}
  * @brief Build action for master (if multithreaded)
  */
 void ActionInitialization::BuildForMaster() const {
-	OutputManager* outManager = new OutputManager();
+	OutputManager* outManager = new OutputManager(fOutputfileName);
 
 	SetUserAction(new RunAction(outManager));
 }
@@ -25,7 +27,7 @@ void ActionInitialization::BuildForMaster() const {
  * @details For the worker threads (normal thread if multitasking is disabled).
  */
 void ActionInitialization::Build() const {
-	OutputManager* outManager = new OutputManager();
+	OutputManager* outManager = new OutputManager(fOutputfileName);
 
 	SetUserAction(new PrimaryGeneratorAction());
 	SetUserAction(new RunAction(outManager));
