@@ -1,17 +1,23 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
-   echo "Usage: $(basename $0) DIRECTORY"
+if [ "$#" -ne 1 ] && [ "$#" -ne 2 ]; then
+   echo "Usage: $(basename $0) DATA_DIRECTORY (RUN_DIRECTORY)"
    exit 1
 fi
 
 if [ ! -e "$1" ]; then
    echo "Directory $1 does not exist, creating..."
    mkdir "$1"
-fi
+fi 
 
 # ROOT and Garfield++ setup
 [[ ! -e "$DRIFT_EXEC" ]] && source $(dirname `readlink -f $0`)/init
+
+if [ "$#" -eq 2 ]; then
+   echo $2
+   cd $2
+   export PARTICLECONVERSION_EXEC="$2/particleconversion"
+fi
 
 WD="$(readlink -f $1)"
 
@@ -20,7 +26,7 @@ echo "Using simulation directory: $WD"
 cd $(dirname "$PARTICLECONVERSION_EXEC")
 
 # needs about 300M ram for 100k photons
-./$(basename "$PARTICLECONVERSION_EXEC") > $WD/particleconversion.log
+./$(basename "$PARTICLECONVERSION_EXEC") $WD/particleconversion.root "$2" > $WD/particleconversion.log
 
 STATUS=$?
 exit $STATUS
