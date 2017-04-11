@@ -6,6 +6,7 @@
 #include "globals.hh"
 
 #include <TTree.h>
+#include <TString.h>
 
 class TFile;
 class TTree;
@@ -13,7 +14,7 @@ class TH1D;
 
 class OutputManager {
 	public:
-		OutputManager();
+		OutputManager(TString outputfileName);
 		~OutputManager();
 	 
 		void Initialize();
@@ -24,6 +25,7 @@ class OutputManager {
 		void FillEvent(TTree*, G4Track*);
 
 	private:
+      TString  fOutputfileName;
 		TFile*   fRootFile;
 
 		TTree*   fDetectorTree;

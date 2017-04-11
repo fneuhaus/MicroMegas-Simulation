@@ -4,7 +4,7 @@
 # Change the default number of workers (in multi-threading mode) 
 #/run/numberOfWorkers 4
 
-/control/execute ../setup_detector.mac
+/control/execute setup_detector.mac
 
 #[[[cog
 #	from MMconfig import *

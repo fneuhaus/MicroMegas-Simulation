@@ -1,11 +1,15 @@
 #!/bin/bash
+export MICROMEGAS_HOME=$HOME/micromegas
+export SCRIPTS_PATH=$MICROMEGAS_HOME/scripts
+export MICROMEGAS_SCRIPTS_PATH=$MICROMEGAS_HOME/scripts
+export MICROMEGAS_SIMULATION_PATH="$MICROMEGAS_HOME/simulation"
+export MICROMEGAS_OUTPUT_PATH="/etapfs05/atlashpc/fneuhaus/micromegas"
+export MICROMEGAS_RUN_PATH="$MICROMEGAS_HOME/simulation/runs/"
 
-export SIMULATION_HOME=$HOME/micromegas-simulation
-export SCRIPTS_PATH=$SIMULATION_HOME/scripts
 
-export PARTICLECONVERSION_EXEC=$SIMULATION_HOME/simulation/particleconversion/build/particleconversion
-export DRIFT_EXEC=$SIMULATION_HOME/simulation/drift/drift
-export AVALANCHE_EXEC=$SIMULATION_HOME/simulation/avalanche/avalanche
+export PARTICLECONVERSION_EXEC=$MICROMEGAS_HOME/simulation/particleconversion/build/particleconversion
+export DRIFT_EXEC=$MICROMEGAS_HOME/simulation/drift/drift
+export AVALANCHE_EXEC=$MICROMEGAS_HOME/simulation/avalanche/avalanche
 
 # Load cmake
 module load software/cmake/3.6.3
@@ -18,8 +22,15 @@ lsetup "root 5.34.25-x86_64-slc6-gcc48-opt" >/dev/null 2>&1
 # Initialize python
 source $HOME/software/python/bin/activate
 
+# Initialize GCC
+module load gcc/4.8.5
+export CC=$(which gcc)
+export CXX=$(which g++)
+
 # Initialize GEANT4
-# Not working on mogon yet
+pushd $HOME/software/geant4.10.03.p01/bin/ > /dev/null
+source geant4.sh
+popd > /dev/null
 
 # Initialize garfield
 export GARFIELD_HOME=$HOME/software/garfield
@@ -35,7 +46,7 @@ export PATH=$PATH:$ELMER_HOME/bin
 export PATH=$HOME/software/gmsh/bin:$PATH
 
 # Pythonpath
-export PYTHONPATH=$SIMULATION_HOME/simulation/:$PYTHONPATH
+export PYTHONPATH=$MICROMEGAS_SIMULATION_PATH:$PYTHONPATH
 
 # Path to scripts
 export PATH=$SCRIPTS_PATH:$PATH

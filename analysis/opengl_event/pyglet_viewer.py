@@ -34,6 +34,8 @@ def parse_arguments(argv):
       help='specify the file were the obj file of the mesh is stored.')
    parser.add_argument('--mesh-scale-factor', dest='mesh_scale_factor', type=float, default=1.,
       help='scale the loaded mesh by this factor.')
+   parser.add_argument('--mesh-position', type=float, default=128., dest='mesh_position',
+      help='z-position of the center of the mesh in um.')
    parser.add_argument('--bounding-box', type=bounding_box, default=[(-1, 1), (-1, 1), (0, 3)],
       help='bounding box for drawing the bounding box (includes the grid).')
 
@@ -77,5 +79,5 @@ if __name__ == '__main__':
    if options.avalanche_lines:
       viewer.add_object(DriftLines(options.avalanche_lines, options.event_id))
    if options.mesh:
-      viewer.add_object(Mesh(options.mesh, options.mesh_scale_factor))
+      viewer.add_object(Mesh(options.mesh, options.mesh_scale_factor, options.mesh_position))
    viewer.run()

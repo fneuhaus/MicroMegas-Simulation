@@ -163,6 +163,8 @@ class TrackballCamera:
       """ initialize the camera, giving a radius from the focal point for
       the camera eye.  Update focal point & up via the update_modelview call.
       """
+      # radius
+      self.radius = radius
       # the quaternion storing the rotation
       self.rot_quat = np.array([0.67678407, 0.09912717, 0.10340824, 0.7221107])
       # the last mouse update

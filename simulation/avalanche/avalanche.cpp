@@ -100,6 +100,8 @@ int main(int argc, char * argv[]) {
 	/* [[[cog
 	from MMconfig import *
 
+	use_local_mesh_file = (conf["amplification"]["use_local_mesh_file"] == 1) if 'use_local_mesh_file' in conf['amplification'] else False
+	geometry_path = conf["amplification"]["geometry_path"] if not use_local_mesh_file else '.' 
 	cog.outl(
 		"""
 		ComponentElmer* fm = new ComponentElmer(
@@ -113,7 +115,7 @@ int main(int argc, char * argv[]) {
 		fm->EnablePeriodicityX();
 		fm->EnablePeriodicityY();
 		//fm->SetWeightingField("{0}/geometry/field_weight.result", "readout");
-		""".format(conf["amplification"]["geometry_path"])
+		""".format(geometry_path)
 	)
 	]]] */
 	//[[[end]]]
@@ -199,10 +201,10 @@ int main(int argc, char * argv[]) {
 			Double_t initialTime = inT->at(e);
 			Double_t initialEnergy = inEkin->at(e); // override default energy
 
-			//cout << "Initial Time    : " << initialTime << " ns" << endl;
+			//cout << "Initial Time	 : " << initialTime << " ns" << endl;
 			//cout << "Initial Energy  : " << initialEnergy << " eV" << endl;
 			//cout << "Initial position: " << initialPosition.x() << ", " << initialPosition.y()  << ", " << initialPosition.z() << " cm" << endl;
-         
+			
 			avalanchemicroscopic->AvalancheElectron(initialPosition.x(), initialPosition.y(), initialPosition.z(), initialTime, initialEnergy, initialDirection.x(), initialDirection.y(), initialDirection.z());
 
 			Int_t ne, ni;
