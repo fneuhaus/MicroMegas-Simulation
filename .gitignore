@@ -11,5 +11,6 @@ simulation/drift/drift
 simulation/outfiles/
 simulation/runs/
 .clang_complete
-simulation/avalanche/geometry/geometry/elec.0001.vtu
+simulation/avalanche/geometry/geometry/*.vtu
+simulation/avalanche/geometry/geometry/*.result
 simulation/avalanche/geometry/*.obj
