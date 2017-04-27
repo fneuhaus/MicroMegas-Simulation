@@ -43,48 +43,48 @@
  * @details The physics list is needed to tell what physics processes should be considered in the simulation.
  */
 PhysicsList::PhysicsList() : G4VModularPhysicsList(), fEmPhysicsList(0), fDecayPhysicsList(0), fStepMaxProcess(0) {
-	G4EmParameters::Instance()->SetVerbose(1);
+   G4EmParameters::Instance()->SetVerbose(1);
 
-	SetDefaultCutValue(1*mm);
+   SetDefaultCutValue(1 * mm);
 
-	fStepMaxProcess = new StepMax();
+   fStepMaxProcess = new StepMax();
 
-	// G4EmLivermorePhysics
-	// G4EmPenelopePhysics
-	// G4EmStandardPhysics_option4
-	fEmName = G4String("G4EmStandardPhysics_option4");
-	fEmPhysicsList = new G4EmStandardPhysics_option4(1);
+   // G4EmLivermorePhysics
+   // G4EmPenelopePhysics
+   // G4EmStandardPhysics_option4
+   fEmName = G4String("G4EmStandardPhysics_option4");
+   fEmPhysicsList = new G4EmStandardPhysics_option4(1);
 
-	SetVerboseLevel(1);
+   SetVerboseLevel(1);
 }
 
 PhysicsList::~PhysicsList() {
-	delete fDecayPhysicsList;
-	delete fEmPhysicsList;
-	delete fStepMaxProcess;
+   delete fDecayPhysicsList;
+   delete fEmPhysicsList;
+   delete fStepMaxProcess;
 }
 
 /**
  * @brief Construct the particles
  */
 void PhysicsList::ConstructParticle() {
-	G4BosonConstructor pBosonConstructor;
-	pBosonConstructor.ConstructParticle();
+   G4BosonConstructor pBosonConstructor;
+   pBosonConstructor.ConstructParticle();
 
-	G4LeptonConstructor pLeptonConstructor;
-	pLeptonConstructor.ConstructParticle();
+   G4LeptonConstructor pLeptonConstructor;
+   pLeptonConstructor.ConstructParticle();
 
-	G4MesonConstructor pMesonConstructor;
-	pMesonConstructor.ConstructParticle();
+   G4MesonConstructor pMesonConstructor;
+   pMesonConstructor.ConstructParticle();
 
-	G4BaryonConstructor pBaryonConstructor;
-	pBaryonConstructor.ConstructParticle();
+   G4BaryonConstructor pBaryonConstructor;
+   pBaryonConstructor.ConstructParticle();
 
-	G4IonConstructor pIonConstructor;
-	pIonConstructor.ConstructParticle();
+   G4IonConstructor pIonConstructor;
+   pIonConstructor.ConstructParticle();
 
-	G4ShortLivedConstructor pShortLivedConstructor;
-	pShortLivedConstructor.ConstructParticle();
+   G4ShortLivedConstructor pShortLivedConstructor;
+   pShortLivedConstructor.ConstructParticle();
 }
 
 /**
@@ -94,53 +94,53 @@ void PhysicsList::ConstructParticle() {
  * step size.
  */
 void PhysicsList::ConstructProcess() {
-	AddTransportation();
-	fEmPhysicsList->ConstructProcess();
-	AddDecay();
-	AddStepMax();
+   AddTransportation();
+   fEmPhysicsList->ConstructProcess();
+   AddDecay();
+   AddStepMax();
 }
 
 void PhysicsList::AddDecay() {
-	// Add Decay Process
+   // Add Decay Process
 
-	G4Decay* fDecayProcess = new G4Decay();
-	G4ParticleTable::G4PTblDicIterator *theParticleIterator = this->GetParticleIterator();
-	theParticleIterator->reset();
-	while ((*theParticleIterator)()) {
-		G4ParticleDefinition* particle = theParticleIterator->value();
-		G4ProcessManager* pmanager = particle->GetProcessManager();
+   G4Decay* fDecayProcess = new G4Decay();
+   G4ParticleTable::G4PTblDicIterator *theParticleIterator = this->GetParticleIterator();
+   theParticleIterator->reset();
+   while ((*theParticleIterator)()) {
+      G4ParticleDefinition* particle = theParticleIterator->value();
+      G4ProcessManager* pmanager = particle->GetProcessManager();
 
-		if (fDecayProcess->IsApplicable(*particle) && !particle->IsShortLived()) {
+      if (fDecayProcess->IsApplicable(*particle) && !particle->IsShortLived()) {
 
-			pmanager->AddProcess(fDecayProcess);
+         pmanager->AddProcess(fDecayProcess);
 
-			// set ordering for PostStepDoIt and AtRestDoIt
-			pmanager->SetProcessOrdering(fDecayProcess, idxPostStep);
-			pmanager->SetProcessOrdering(fDecayProcess, idxAtRest);
+         // set ordering for PostStepDoIt and AtRestDoIt
+         pmanager->SetProcessOrdering(fDecayProcess, idxPostStep);
+         pmanager->SetProcessOrdering(fDecayProcess, idxAtRest);
 
-		}
-	}
+      }
+   }
 }
 
 void PhysicsList::AddStepMax() {
-	// Step limitation seen as a process
-	G4ParticleTable::G4PTblDicIterator *theParticleIterator = this->GetParticleIterator();
-	theParticleIterator->reset();
-	/*
-	while ((*theParticleIterator)()) {
-		G4ParticleDefinition* particle = theParticleIterator->value();
-		G4ProcessManager* pmanager = particle->GetProcessManager();
+   // Step limitation seen as a process
+   G4ParticleTable::G4PTblDicIterator *theParticleIterator = this->GetParticleIterator();
+   theParticleIterator->reset();
+   /*
+   while ((*theParticleIterator)()) {
+      G4ParticleDefinition* particle = theParticleIterator->value();
+      G4ProcessManager* pmanager = particle->GetProcessManager();
 
-		//if (fStepMaxProcess->IsApplicable(*particle)) {
-		//	pmanager->AddDiscreteProcess(fStepMaxProcess);
-		//}
-	}
-	*/
+      //if (fStepMaxProcess->IsApplicable(*particle)) {
+      // pmanager->AddDiscreteProcess(fStepMaxProcess);
+      //}
+   }
+   */
 }
 
 void PhysicsList::SetCuts() {
-	G4ProductionCutsTable::GetProductionCutsTable()->SetEnergyRange(100 * eV, 10 * GeV);
-	if (verboseLevel > 0) {
-		DumpCutValuesTable();
-	}
+   G4ProductionCutsTable::GetProductionCutsTable()->SetEnergyRange(100 * eV, 10 * GeV);
+   if (verboseLevel > 0) {
+      DumpCutValuesTable();
+   }
 }

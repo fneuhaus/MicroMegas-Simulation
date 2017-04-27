@@ -17,9 +17,9 @@ ActionInitialization::~ActionInitialization() {}
  * @brief Build action for master (if multithreaded)
  */
 void ActionInitialization::BuildForMaster() const {
-	OutputManager* outManager = new OutputManager(fOutputfileName);
+   OutputManager* outManager = new OutputManager(fOutputfileName);
 
-	SetUserAction(new RunAction(outManager));
+   SetUserAction(new RunAction(outManager));
 }
 
 /**
@@ -27,13 +27,13 @@ void ActionInitialization::BuildForMaster() const {
  * @details For the worker threads (normal thread if multitasking is disabled).
  */
 void ActionInitialization::Build() const {
-	OutputManager* outManager = new OutputManager(fOutputfileName);
+   OutputManager* outManager = new OutputManager(fOutputfileName);
 
-	SetUserAction(new PrimaryGeneratorAction());
-	SetUserAction(new RunAction(outManager));
-	
-	EventAction* eventAction = new EventAction;
-	SetUserAction(eventAction);
-	
-	SetUserAction(new SteppingAction(eventAction, fDetector, outManager));
-}  
+   SetUserAction(new PrimaryGeneratorAction());
+   SetUserAction(new RunAction(outManager));
+
+   EventAction* eventAction = new EventAction;
+   SetUserAction(eventAction);
+
+   SetUserAction(new SteppingAction(eventAction, fDetector, outManager));
+}
