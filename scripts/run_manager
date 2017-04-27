@@ -98,6 +98,9 @@ class RunManager:
 
          The most commonly used commands are:
          create     Create a new run configuration from the current code
+         run        Run an already existing configuration
+         ls         List the existing configurations
+         remove     Remove an existing configuration
       ''')
       parser.add_argument('command', help='Subcommand to run')
       args = parser.parse_args(argv[1:2])
@@ -166,6 +169,8 @@ class RunManager:
          help='Give a custom ID for the run (not recommended).')
       parser.add_argument('-m', '--message', default=None,
          help='Description for the new run.')
+      parser.add_argument('--mesh', default=None,
+         help='Path to the mesh file to use.')
       parser.add_argument('--particleconversion', default=None,
          help='Use this file as input from particleconversion.')
       args = parser.parse_args(argv)
@@ -183,6 +188,11 @@ class RunManager:
       if args.particleconversion:
          if not os.path.isfile(args.particleconversion):
             print('The input file for the particleconversion does not exist. Stop here.')
+            exit(1)
+      # Check mesh input file
+      if args.mesh:
+         if not os.path.isfile(args.mesh):
+            print('The input file for the mesh does not exist. Stop here.')
             exit(1)
 
       # Create a new run
@@ -202,6 +212,9 @@ class RunManager:
       # Create the folders
       os.mkdir(run.run_path)
       os.mkdir(run.output_path)
+
+      # Copy the mesh file to the avalanche directory
+      copy2(args.mesh, os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'))
 
       # Make the project
       logfile_path = os.path.join(run.run_path, 'make.log')
