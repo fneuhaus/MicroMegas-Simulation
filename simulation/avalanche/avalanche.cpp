@@ -18,8 +18,8 @@
 #include "Plotting.hh"
 #include "ViewFEMesh.hh"
 #include "ViewSignal.hh"
+#include "FundamentalConstants.hh"
 #include "GarfieldConstants.hh"
-//#include "Random.hh"
 #include "AvalancheMicroscopic.hh"
 
 using namespace std;
@@ -86,6 +86,8 @@ int main(int argc, char * argv[]) {
 	vector<Int_t> status;
 	vector<Double_t> x0, y0, z0, e0, t0;
 	vector<Double_t> x1, y1, z1, e1, t1;
+   vector<Double_t> signal_t;
+   vector<Double_t> signal_amplitude;
 
 	TFile* outputFile = new TFile(outputfileName, "RECREATE");
 	outputFile->cd();
@@ -95,13 +97,15 @@ int main(int argc, char * argv[]) {
 	outputTree->Branch("status", &status);
 	outputTree->Branch("x0", &x0); outputTree->Branch("y0", &y0); outputTree->Branch("z0", &z0); outputTree->Branch("e0", &e0); outputTree->Branch("t0", &t0);
 	outputTree->Branch("x1", &x1); outputTree->Branch("y1", &y1); outputTree->Branch("z1", &z1); outputTree->Branch("e1", &e1); outputTree->Branch("t1", &t1);
+	outputTree->Branch("signal_t", &signal_t);
+	outputTree->Branch("signal_amplitude", &signal_amplitude);
 
 	// Import an Elmer-created LEM and the weighting field for the readout electrode
 	/* [[[cog
 	from MMconfig import *
 
 	use_local_mesh_file = (conf["amplification"]["use_local_mesh_file"] == 1) if 'use_local_mesh_file' in conf['amplification'] else False
-	geometry_path = conf["amplification"]["geometry_path"] if not use_local_mesh_file else '.' 
+	geometry_path = conf["amplification"]["geometry_path"] if not use_local_mesh_file else '.'
 	cog.outl(
 		"""
 		ComponentElmer* fm = new ComponentElmer(
@@ -114,9 +118,10 @@ int main(int argc, char * argv[]) {
 		);
 		fm->EnablePeriodicityX();
 		fm->EnablePeriodicityY();
-		//fm->SetWeightingField("{0}/geometry/field_weight.result", "readout");
 		""".format(geometry_path)
 	)
+	if bool(conf['amplification']['signal_calculation_enable']):
+		cog.outl('fm->SetWeightingField("{0}/geometry/field_weight.result", "readout");'.format(geometry_path))
 	]]] */
 	//[[[end]]]
 	fm->PrintRange();
@@ -147,14 +152,33 @@ int main(int argc, char * argv[]) {
 	sensor->AddComponent(fm);
 	sensor->SetArea(areaXmin, areaYmin, areaZmin, areaXmax, areaYmax, areaZmax);
 	sensor->AddElectrode(fm, "readout");
-	sensor->SetTimeWindow(-2., 0.1, 80);
 
+   /*
+    * Create the avalanche calculation and enable signal calculations if activated in the config.
+    */
 	AvalancheMicroscopic* avalanchemicroscopic = new AvalancheMicroscopic();
 	avalanchemicroscopic->SetSensor(sensor);
 	avalanchemicroscopic->SetCollisionSteps(1);
-	if (maxAvalancheSize > 0) avalanchemicroscopic->EnableAvalancheSizeLimit(maxAvalancheSize);
-	//avalanchemicroscopic->EnableSignalCalculation();
-
+	if (maxAvalancheSize > 0) {
+      avalanchemicroscopic->EnableAvalancheSizeLimit(maxAvalancheSize);
+   }
+   /*[[[cog
+   from MMconfig import *
+   if bool(conf["amplification"]["signal_calculation_enable"]):
+      cog.outl(
+         '''
+   Double_t signal_t_min = {};
+   Double_t signal_t_stepsize = {};
+   Double_t signal_t_steps = {};
+   sensor->SetTimeWindow(signal_t_min, signal_t_stepsize, signal_t_steps);
+         '''.format(
+               conf['amplification']['signal_calculation_t_min'],
+               conf['amplification']['signal_calculation_t_stepsize'],
+               conf['amplification']['signal_calculation_t_steps']
+      ))
+      cog.outl('avalanchemicroscopic->EnableSignalCalculation();')
+   ]]]*/
+   //[[[end]]]
 
 	/* [[[cog
 	from MMconfig import *
@@ -219,7 +243,7 @@ int main(int argc, char * argv[]) {
 			// number of electron endpoints - 1 is the number of hits on the readout for an event passing the mesh
 			int np = avalanchemicroscopic->GetNumberOfElectronEndpoints();
 			nelep = np;
-			//cout << "Number of electron endpoints: " << np << endl;
+         cout << "Number of electron endpoints: " << np << endl;
 
 			for (int j=0; j<np; j++) {
 				avalanchemicroscopic->GetElectronEndpoint(j, xi, yi, zi, ti, ei, xf, yf, zf, tf, ef, stat);
@@ -229,6 +253,16 @@ int main(int argc, char * argv[]) {
 				status.push_back(stat);
 			}
 
+         /*[[[cog
+         from MMconfig import *
+         if bool(conf["amplification"]["signal_calculation_enable"]):
+            cog.outl(
+            '''for (int bin = 0; bin < signal_t_steps; bin++) {
+            signal_t.push_back(signal_t_min + bin * signal_t_stepsize);
+            signal_amplitude.push_back(sensor->GetSignal("readout", bin) / ElementaryCharge);
+         }''')
+         ]]]*/
+         //[[[end]]]
 			cout << setw(5) << i/(double)numberOfEvents*100. << "% of all events done." << endl;
 			cout << setw(4) << e/(double)numberOfElectrons*100. << "% of this event done." << endl;
 		}
@@ -242,6 +276,8 @@ int main(int argc, char * argv[]) {
 		outputTree->Fill();
 		x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
 		x1.clear(); y1.clear(); z1.clear(); e1.clear(); t1.clear();
+      signal_t.clear();
+      signal_amplitude.clear();
 	}
 
 	outputFile->cd();
