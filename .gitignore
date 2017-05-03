@@ -14,3 +14,6 @@ simulation/runs/
 .clang_complete
 simulation/avalanche/geometry/geometry/
 simulation/avalanche/geometry/*.obj
+simulation/avalanche/geometry/geometry.fcstd
+simulation/avalanche/geometry/geometry.msh
+simulation/avalanche/geometry/geometry.step
