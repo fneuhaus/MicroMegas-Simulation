@@ -25,10 +25,20 @@
  */
 int main(int argc, char** argv) {
    TString outputfileName;
+   TString macroFolder;
+
+   //[[[cog from MMconfig import *; cog.outl("macroFolder = \"{}\";".format(conf['particleconversion']['macro_folder'])) ]]]
+   //[[[end]]]
+
    if (argc == 2) {
       G4cout << "Using command line parameters as out file: ";
       outputfileName = argv[1];
       G4cout << outputfileName << G4endl;
+   } else if (argc == 3) {
+      G4cout << "Using command line parameters as out file: ";
+      outputfileName = argv[1];
+      macroFolder = argv[2];
+      G4cout << outputfileName << " and also for macro directory " << macroFolder << G4endl;
    } else {
       //[[[cog from MMconfig import *; import os; cog.outl("outputfileName = \"{}\";".format(conf["particleconversion"]["out_filename"])) ]]]
       //[[[end]]]
@@ -60,13 +70,13 @@ int main(int argc, char** argv) {
    visManager->Initialize();
 
    // Process macro or start UI session
-   /*[[[cogs
+   /*[[[cog
    from MMconfig import *
 
    def ui_start():
       cog.outl("G4UIExecutive* ui = new G4UIExecutive(argc, argv);")
       cog.outl("G4UImanager* UImanager = G4UImanager::GetUIpointer();")
-      cog.outl('UImanager->ApplyCommand("/control/macroPath {}");'.format(conf['particleconversion']['macro_folder']))
+      cog.outl('UImanager->ApplyCommand("/control/macroPath " + macroFolder);')
       cog.outl('UImanager->ApplyCommand("/control/execute vis.mac");')
       cog.outl("ui->SessionStart();")
       cog.outl("delete ui;")
@@ -75,6 +85,7 @@ int main(int argc, char** argv) {
       macro_path = conf["particleconversion"]["macro_path"]
       if macro_path != "": # run given macro file
          cog.outl("G4UImanager* UImanager = G4UImanager::GetUIpointer();")
+         cog.outl('UImanager->ApplyCommand("/control/macroPath " + macroFolder);')
          cog.outl("UImanager->ApplyCommand(\"/control/execute {}\");".format(macro_path))
       else:
          ui_start()
