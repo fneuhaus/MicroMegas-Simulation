@@ -12,6 +12,5 @@ simulation/outfiles/
 simulation/meshs/
 simulation/runs/
 .clang_complete
-simulation/avalanche/geometry/geometry/*.vtu
-simulation/avalanche/geometry/geometry/*.result
+simulation/avalanche/geometry/geometry/
 simulation/avalanche/geometry/*.obj
