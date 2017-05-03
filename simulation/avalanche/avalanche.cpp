@@ -104,8 +104,8 @@ int main(int argc, char * argv[]) {
    /* [[[cog
    from MMconfig import *
 
-   use_local_mesh_file = (conf["amplification"]["use_local_mesh_file"] == 1) if 'use_local_mesh_file' in conf['amplification'] else False
-   geometry_path = conf["amplification"]["geometry_path"] if not use_local_mesh_file else '.'
+   use_local_mesh_file = bool(conf["amplification"]["use_local_mesh_file"])
+   geometry_path = conf["amplification"]["geometry_path"] if not use_local_mesh_file else './geometry'
    cog.outl(
       """
       ComponentElmer* fm = new ComponentElmer(
