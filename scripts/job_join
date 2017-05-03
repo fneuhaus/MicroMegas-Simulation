@@ -6,7 +6,7 @@ if [ "$#" -lt 2 ]; then
 fi
 
 # ROOT and Garfield++ setup
-source /home/fneuhaus/micromegas-simulation/simulation/init.sh
+[[ ! -e "$ROOTSYS" ]] && source $(dirname `readlink -f $0`)/init
 
 $ROOTSYS/bin/hadd -f $@
 
