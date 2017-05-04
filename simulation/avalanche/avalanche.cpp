@@ -253,19 +253,21 @@ int main(int argc, char * argv[]) {
             status.push_back(stat);
          }
 
-         /*[[[cog
-         from MMconfig import *
-         if bool(conf["amplification"]["signal_calculation_enable"]):
-            cog.outl(
-            '''for (int bin = 0; bin < signal_t_steps; bin++) {
-            signal_t.push_back(signal_t_min + bin * signal_t_stepsize);
-            signal_amplitude.push_back(sensor->GetSignal("readout", bin) / ElementaryCharge);
-         }''')
-         ]]]*/
-         //[[[end]]]
          cout << setw(5) << i/(double)numberOfEvents*100. << "% of all events done." << endl;
          cout << setw(4) << e/(double)numberOfElectrons*100. << "% of this event done." << endl;
       }
+
+      /*[[[cog
+      from MMconfig import *
+      if bool(conf["amplification"]["signal_calculation_enable"]):
+         cog.outl(
+         '''for (int bin = 0; bin < signal_t_steps; bin++) {
+         signal_t.push_back(signal_t_min + bin * signal_t_stepsize);
+         signal_amplitude.push_back(sensor->GetSignal("readout", bin) / ElementaryCharge);
+      }''')
+      ]]]*/
+      //[[[end]]]
+
       /* [[[cog
       from MMconfig import *
       if conf['amplification']['save_drift_lines'] == 1:
