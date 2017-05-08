@@ -44,7 +44,7 @@ export PATH=$PATH:$ELMER_HOME/bin
 
 # gmsh
 export PATH=$HOME/software/gmsh/bin:$PATH
-export LD_LIBRARY_PATH=$HOME/software/oce/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HOME/software/oce/lib:$LD_LIBRARY_PATH
 
 # Pythonpath
 export PYTHONPATH=$MICROMEGAS_SIMULATION_PATH:$PYTHONPATH
