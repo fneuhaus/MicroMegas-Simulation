@@ -120,7 +120,7 @@ int main(int argc, char * argv[]) {
       fm->EnablePeriodicityY();
       """.format(geometry_path)
    )
-   if bool(conf['amplification']['signal_calculation_enable']):
+   if conf['amplification'].getboolean('signal_calculation_enable'):
       cog.outl('fm->SetWeightingField("{0}/geometry/field_weight.result", "readout");'.format(geometry_path))
    ]]] */
    //[[[end]]]
@@ -164,7 +164,7 @@ int main(int argc, char * argv[]) {
    }
    /*[[[cog
    from MMconfig import *
-   if bool(conf["amplification"]["signal_calculation_enable"]):
+   if conf['amplification'].getboolean('signal_calculation_enable'):
       cog.outl(
          '''
    Double_t signal_t_min = {};
@@ -182,7 +182,7 @@ int main(int argc, char * argv[]) {
 
    /* [[[cog
    from MMconfig import *
-   if conf['amplification']['save_drift_lines'] == 1:
+   if conf['amplification'].getboolean('save_drift_lines'):
       cog.outl('SaveDrift* savedrift = new SaveDrift("{}");'.format(conf['amplification']['drift_lines_path']))
       cog.outl('avalanchemicroscopic->EnableSaving(savedrift);')
       cog.outl('avalanchemicroscopic->SetSkippingFactor({});'.format(conf['amplification']['drift_lines_skipping_factor']))
@@ -192,7 +192,7 @@ int main(int argc, char * argv[]) {
 
    /* [[[cog
    from MMconfig import *
-   if conf['amplification']['save_electric_field'] == 1:
+   if conf['amplification'].getboolean('save_electric_field'):
       cog.outl('''TCanvas *c1 = new TCanvas();
    ViewField *viewfield = new ViewField();
    viewfield->SetCanvas(c1);
@@ -259,7 +259,7 @@ int main(int argc, char * argv[]) {
 
       /*[[[cog
       from MMconfig import *
-      if bool(conf["amplification"]["signal_calculation_enable"]):
+      if conf['amplification'].getboolean('signal_calculation_enable'):
          cog.outl(
          '''for (int bin = 0; bin < signal_t_steps; bin++) {
          signal_t.push_back(signal_t_min + bin * signal_t_stepsize);
@@ -270,7 +270,7 @@ int main(int argc, char * argv[]) {
 
       /* [[[cog
       from MMconfig import *
-      if conf['amplification']['save_drift_lines'] == 1:
+      if conf['amplification'].getboolean('save_drift_lines'):
          cog.outl('avalanchemicroscopic->SavingEndEvent();')
       ]]]*/
       //[[[end]]]
@@ -278,8 +278,14 @@ int main(int argc, char * argv[]) {
       outputTree->Fill();
       x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
       x1.clear(); y1.clear(); z1.clear(); e1.clear(); t1.clear();
-      signal_t.clear();
-      signal_amplitude.clear();
+      /*[[[cog
+      from MMconfig import *
+      if conf['amplification'].getboolean('signal_calculation_enable'):
+         cog.outl(
+         '''signal_t.clear();
+         signal_amplitude.clear()''')
+      ]]]*/
+      //[[[end]]]
    }
 
    outputFile->cd();
@@ -288,7 +294,7 @@ int main(int argc, char * argv[]) {
    inputFile->Close();
    /* [[[cog
    from MMconfig import *
-   if conf['amplification']['save_drift_lines'] == 1:
+   if conf['amplification'].getboolean('save_drift_lines'):
       cog.outl('delete savedrift;')
    ]]]*/
    ///[[[end]]]
