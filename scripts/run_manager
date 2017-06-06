@@ -452,6 +452,93 @@ class RunManager:
                   {output_path}/*_avalanche.root'.format(scripts_path=self.scripts_path,
                      output_path=run.output_path), shell=True)
 
+   def status(self, argv):
+      """ Check the status of running jobs. """
+      parser = argparse.ArgumentParser(
+         description='Status on given runs.'
+      )
+
+      parser.add_argument('-d', '--detailed', action='store_true',
+            help='give a more detailed status.')
+      args = parser.parse_args(argv)
+
+      # Get running jobs
+      try:
+         bjobs_response = check_output('bjobs | egrep -wo " [adp][0-9]{4}"', shell=True,
+               stderr=DEVNULL).decode('utf-8')
+         running_jobs = [ ( int(s.strip()[1:]), s.strip()[0] ) for s in bjobs_response.splitlines() ]
+      except CalledProcessError as e:
+         print('No running jobs.')
+         return
+
+      # Get terminal width for beautiful output
+      terminal_rows, terminal_columns = [ int(a) for a in os.popen('stty size', 'r').read().split() ]
+      def cprint(text, color, end='\n'):
+         print('\033[{}m{}\033[0m'.format(color, text), end=end)
+      for run_id, step in running_jobs:
+         run = self.runs[run_id]
+         print('Job {:0>4}: '.format(run_id), end='')
+         if step == 'p':
+            print('Running particleconversion')
+         elif step == 'd':
+            print('Running drift')
+            if args.detailed:
+               status = []
+               log_files = sorted(glob.glob(os.path.join(run.output_path, '*_drift.log')))
+               for log_file in log_files:
+                  job_num = re.search(r'([0-9]+)_drift.log', log_file).group(1)
+                  response = check_output( 'tac {} | grep -i "done" -m 1'
+                        .format(log_file), shell=True).decode('utf-8').strip()
+                  if response != 'Done.':
+                     try:
+                        response = re.match(r'[0-9]+[\.0-9]*%', response).group(0)
+                     except AttributeError:
+                        response = '---'
+                  status.append(( job_num, response ))
+               status_width = max([ len(s[0]) + len(s[1]) for s in status ]) + 6
+               cols = int(terminal_columns / status_width)
+               for i, s in enumerate(status):
+                  if s[1] == 'Done.':
+                     color = 32
+                  elif s[1] == '---':
+                     color = 31
+                  else:
+                     color = 33
+                  cprint('{: <{}}'.format('{0[0]}: {0[1]}'.format(s), status_width), color, end='')
+                  if (i + 1) % cols == 0:
+                     print()
+               print('\n')
+         elif step == 'a':
+            print('Running avalanche')
+            if args.detailed:
+               status = []
+               log_files = sorted(glob.glob(os.path.join(run.output_path, '*_avalanche.log')))
+               for log_file in log_files:
+                  job_num = re.search(r'([0-9]+)_avalanche.log', log_file).group(1)
+                  response = check_output(
+                        'tac {} | grep -e "all events done" -e "Done" -m 1'
+                        .format(log_file), shell=True).decode('utf-8').strip()
+                  if response != 'Done.':
+                     try:
+                        response = re.match(r'([0-9]+[\.0-9]*%) of all events done',
+                              response).group(1)
+                     except AttributeError:
+                        response = '---'
+                  status.append(( job_num, response ))
+               status_width = max([ len(s[0]) + len(s[1]) for s in status ]) + 6
+               cols = int(terminal_columns / status_width)
+               for i, s in enumerate(status):
+                  if s[1] == 'Done.':
+                     color = 32
+                  elif s[1] == '---':
+                     color = 31
+                  else:
+                     color = 33
+                  cprint('{: <{}}'.format('{0[0]}: {0[1]}'.format(s), status_width), color, end='')
+                  if (i + 1) % cols == 0:
+                     print()
+               print('\n')
+
    def remove(self, argv):
       """ Remove one or more run configurations (and possibly also the generated output files.) """
       parser = argparse.ArgumentParser(
