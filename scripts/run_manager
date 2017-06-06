@@ -255,6 +255,69 @@ class RunManager:
       self.__write_log()
       print('A new run configuration with id {} was successfully created!'.format(run.id))
 
+   def recreate(self, argv):
+      parser = argparse.ArgumentParser(
+         description='Remake an existing configuration based on the original \
+         simulation.conf, but with new code.'
+      )
+      parser.add_argument('runs', help='ID of the run(s). Supported formats: \
+            "1", "1-3", "[ 1, 5-9 ]"', type=run_list)
+      args = parser.parse_args(argv)
+
+      # Check if jobs exist
+      for run_id in args.runs:
+         if run_id not in self.runs:
+            print('There is no run with ID={}'.format(run_id))
+            exit(1)
+
+      for run in [ self.runs[run_id] for run_id in args.runs ]:
+         print('Recompiling job {:0>4}'.format(run.id))
+
+         # Copy the simulation file to the simulation directory
+         copy2(os.path.join(run.run_path, 'simulation.conf'),
+               os.path.join(self.simulation_path, 'simulation.conf'))
+
+         # Copy the mesh file to the avalanche directory
+         copy2(os.path.join(run.run_path, 'geometry/geometry.step'),
+               os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'))
+
+         # Make the project
+         logfile_path = os.path.join(run.run_path, 'make.log')
+         print('Building source...')
+         build_result = call(os.path.join(self.simulation_path, 'build.sh'),
+               shell=True, stdout=open(logfile_path, 'w'), stderr=STDOUT)
+         if build_result:
+            print('An error occured when compiling. The build script exited with\
+                  {}.'.format(build_result))
+            print('See {} for more details.'.format(logfile_path))
+            exit(1)
+         print('Building successfully executed.')
+
+         # Copy the generated executables and mesh files to the run folder
+         copy2(os.path.join(self.simulation_path, 'particleconversion', 'build',
+            'particleconversion'), os.path.join(run.run_path, 'particleconversion'))
+         for f in glob.glob(os.path.join(self.simulation_path, 'particleconversion', '*.mac')):
+            copy2(f, os.path.join(run.run_path, os.path.basename(f)))
+         copy2(os.path.join(self.simulation_path, 'drift', 'drift'),
+               os.path.join(run.run_path, 'drift'))
+         copy2(os.path.join(self.simulation_path, 'avalanche', 'avalanche'),
+               os.path.join(run.run_path, 'avalanche'))
+         rmtree(os.path.join(run.run_path, 'geometry'))
+         copytree(os.path.join(self.simulation_path, 'avalanche', 'geometry'),
+               os.path.join(run.run_path, 'geometry'))
+
+         # Copy the simulation.conf to be able to tell the parameters later
+         copy2(os.path.join(self.simulation_path, 'simulation.conf'),
+               os.path.join(run.run_path, 'simulation.conf'))
+
+         # Clean the source directory
+         print('Cleaning source...')
+         if call(os.path.join(self.simulation_path, 'clear.sh'), shell=True, stdout=DEVNULL,
+               stderr=DEVNULL):
+            print('A problem was detected while cleaning the source. Exiting now.')
+            exit(1)
+         print('Clean successfully executed.')
+
    def ls(self, argv):
       if not self.runs:
          print('There are no runs listed yet.')
