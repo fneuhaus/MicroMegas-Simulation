@@ -427,6 +427,31 @@ class RunManager:
             print(e)
             exit(1)
 
+   def join(self, argv):
+      """ Join the specified jobs.  """
+      parser = argparse.ArgumentParser(
+         description='Join the output files for the specified job(s).'
+      )
+
+      parser.add_argument('runs', type=run_list,
+            help='ID of the run(s). Supported formats: "1", "1-3", "[ 1, 5-9 ]"')
+      args = parser.parse_args(argv)
+
+      for run in [ self.runs[run_id] for run_id in args.runs ]:
+         # Try to join drift
+         if glob.glob(os.path.join(run.output_path, '*_drift.root')):
+            print('Joining drift for job {:0>4}'.format(run.id))
+            check_output('{scripts_path}/job_join {output_path}/drift.root \
+                  {output_path}/*_drift.root'.format(scripts_path=self.scripts_path,
+                     output_path=run.output_path), shell=True)
+
+         # Try to join avalanche
+         if glob.glob(os.path.join(run.output_path, '*_avalanche.root')):
+            print('Joining avalanche for job {:0>4}'.format(run.id))
+            check_output('{scripts_path}/job_join {output_path}/avalanche.root \
+                  {output_path}/*_avalanche.root'.format(scripts_path=self.scripts_path,
+                     output_path=run.output_path), shell=True)
+
    def remove(self, argv):
       """ Remove one or more run configurations (and possibly also the generated output files.) """
       parser = argparse.ArgumentParser(
