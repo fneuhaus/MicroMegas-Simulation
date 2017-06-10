@@ -2,7 +2,7 @@
 #   Length: cm (1µm = 1e-4cm)
 #   Fields: V/cm
 
-# ↑ z                    ╲
+# ↑ z                       ╲
 #  particleconversion ╭ ├────── ... ───┤╴ z = z_cathode and drift:z_max
 #                     │ │     ╲        │
 #                     │ │     │╲       │
@@ -51,6 +51,10 @@
    # gas temperature in °C
    temperature = 20.
 
+   # Penning transfer, 
+   penning_transfer_enable = 1
+   penning_transfer_gas = { 'ar': 0.5 }
+
    # energy needed for electron-ion-pair-production in the detector gas (in eV)
    pair_production_energy = 28.
 
@@ -97,6 +101,9 @@
    field = 600.
 
 [amplification]
+   # Use local mesh file
+   use_local_mesh_file = 1
+
    # input file from drift simulation
    in_filename = ${drift:out_filename}
 

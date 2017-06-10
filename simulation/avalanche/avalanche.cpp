@@ -142,6 +142,17 @@ int main(int argc, char * argv[]) {
    gas->SetMaxElectronEnergy(200.);
    gas->Initialise(true);
 
+   // Penning transfer
+   /*[[[cog
+   from MMconfig import *
+   if conf['detector'].getboolean('penning_transfer_enable'):
+      penning_gases = eval(conf['detector']['penning_transfer_gas'])
+      for gas, penning_r in penning_gases.items():
+         cog.outl('gas->EnablePenningTransfer({}, 0., "{}");'.format(
+            penning_r, gas))
+   ]]]*/
+   //[[[end]]]
+
    // Set the right material to be the gas (probably 0)
    int nMaterials = fm->GetNumberOfMaterials();
    for (int i = 0; i < nMaterials; i++) {
