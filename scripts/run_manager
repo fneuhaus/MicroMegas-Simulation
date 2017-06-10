@@ -480,57 +480,24 @@ class RunManager:
          print('Job {:0>4}: '.format(run_id), end='')
          if step == 'p':
             print('Running particleconversion')
-         elif step == 'd':
-            print('Running drift')
+         elif step == 'd' or step == 'a':
+            if step == 'd':
+               print('Running drift')
+               step = 'drift'
+            if step == 'a':
+               print('Running avalanche')
+               step = 'avalanche'
             if args.detailed:
-               status = []
-               log_files = sorted(glob.glob(os.path.join(run.output_path, '*_drift.log')))
-               for log_file in log_files:
-                  job_num = re.search(r'([0-9]+)_drift.log', log_file).group(1)
-                  response = check_output( 'tac {} | grep -i "done" -m 1'
-                        .format(log_file), shell=True).decode('utf-8').strip()
-                  if response != 'Done.':
-                     try:
-                        response = re.match(r'[0-9]+[\.0-9]*%', response).group(0)
-                     except AttributeError:
-                        response = '---'
-                  status.append(( job_num, response ))
+               status = [ line.split(':') for line in check_output('{} {} {}'.format(
+                  os.path.join(self.scripts_path, 'get_status.sh'), run.output_path, step),
+                  shell=True).decode('utf-8').strip().split('\n') ]
+
                status_width = max([ len(s[0]) + len(s[1]) for s in status ]) + 6
                cols = int(terminal_columns / status_width)
                for i, s in enumerate(status):
                   if s[1] == 'Done.':
                      color = 32
-                  elif s[1] == '---':
-                     color = 31
-                  else:
-                     color = 33
-                  cprint('{: <{}}'.format('{0[0]}: {0[1]}'.format(s), status_width), color, end='')
-                  if (i + 1) % cols == 0:
-                     print()
-               print('\n')
-         elif step == 'a':
-            print('Running avalanche')
-            if args.detailed:
-               status = []
-               log_files = sorted(glob.glob(os.path.join(run.output_path, '*_avalanche.log')))
-               for log_file in log_files:
-                  job_num = re.search(r'([0-9]+)_avalanche.log', log_file).group(1)
-                  response = check_output(
-                        'tac {} | grep -e "all events done" -e "Done" -m 1'
-                        .format(log_file), shell=True).decode('utf-8').strip()
-                  if response != 'Done.':
-                     try:
-                        response = re.match(r'([0-9]+[\.0-9]*%) of all events done',
-                              response).group(1)
-                     except AttributeError:
-                        response = '---'
-                  status.append(( job_num, response ))
-               status_width = max([ len(s[0]) + len(s[1]) for s in status ]) + 6
-               cols = int(terminal_columns / status_width)
-               for i, s in enumerate(status):
-                  if s[1] == 'Done.':
-                     color = 32
-                  elif s[1] == '---':
+                  elif s[1] == 'n/a':
                      color = 31
                   else:
                      color = 33
