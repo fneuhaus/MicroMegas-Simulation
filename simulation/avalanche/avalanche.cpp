@@ -81,6 +81,7 @@ int main(int argc, char * argv[]) {
    inputTree->SetBranchAddress("nele", &inNele);
    cout << "Reading " << numberOfEvents << " events from " << inputFile->GetPath() << endl;
 
+   Int_t nele_drift; // number of electrons from drift
    Int_t nele;  // number of electrons in avalanche
    Int_t nelep; // number of electron end points
    vector<Int_t> status;
@@ -92,6 +93,7 @@ int main(int argc, char * argv[]) {
    TFile* outputFile = new TFile(outputfileName, "RECREATE");
    outputFile->cd();
    TTree* outputTree = new TTree("avalancheTree", "Avalanches");
+   outputTree->Branch("nele_drift", &nele_drift, "nele_drift/I");
    outputTree->Branch("nele", &nele, "nele/I");
    outputTree->Branch("nelep", &nelep, "nelep/I");
    outputTree->Branch("status", &status);
@@ -215,6 +217,9 @@ int main(int argc, char * argv[]) {
       inputTree->GetEvent(i, 0); // 0 get only active branches, 1 get all branches
       //inputTree->Show(i);
       numberOfElectrons = inNele;
+      nele_drift = numberOfElectrons;
+      nele = 0;
+      nelep = 0;
 
       for (int e = 0; e < numberOfElectrons; e++) {
          // Set the initial position [cm], direction, starting time [ns] and initial energy [eV]
@@ -233,7 +238,7 @@ int main(int argc, char * argv[]) {
 
          Int_t ne, ni;
          avalanchemicroscopic->GetAvalancheSize(ne, ni);
-         nele = ne;
+         nele += ne;
 
          // local variables to be pushed into vectors
          Double_t xi, yi, zi, ti, ei;
@@ -242,7 +247,7 @@ int main(int argc, char * argv[]) {
 
          // number of electron endpoints - 1 is the number of hits on the readout for an event passing the mesh
          int np = avalanchemicroscopic->GetNumberOfElectronEndpoints();
-         nelep = np;
+         nelep += np;
          cout << "Number of electron endpoints: " << np << endl;
 
          for (int j = 0; j < np; j++) {
