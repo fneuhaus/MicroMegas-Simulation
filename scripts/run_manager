@@ -366,26 +366,31 @@ class RunManager:
             help='Number of cores per job.')
       parser.add_argument('--resplit', action='store_true', help='Force resplitting the files (may delete files).')
       parser.add_argument('-q', '--queue', default=None, help='Specify which queue to use.')
-      parser.add_argument('-t', '--time', type=int, help='Time limit for each job in minutes.', default=None)
-      parser.add_argument('-m', '--memory', default='Reserve500M', help='Memory usage for each thread.')
+      parser.add_argument('-t', '--time', help='Time limit for each job in the format d-hh:mm).', default=None)
+      parser.add_argument('-m', '--memory', type=int, default='500', help='Memory usage per thread in MB.')
+      parser.add_argument('--account', default='atlashpc', help='Slurm computing account to use.')
 
       args = parser.parse_args(argv)
 
       # Adapt queue if necessary
       if not args.queue:
          if args.step == 'particleconversion':
-            args.queue = 'atlasshort'
+            args.cores = 1
+            args.queue = 'short'
          elif args.cores >= 64:
-            args.queue = 'atlasnodeshort'
+            args.queue = 'nodeshort'
          else:
-            args.queue = 'atlasshort'
+            args.queue = 'short'
 
       # Set default runtime
       if not args.time:
          if args.step == 'particleconversion':
-            args.time = 60
+            args.time = '0-01:00'
+         elif args.step == 'drift':
+            args.time = '0-05:00'
          else:
-            args.time = 300
+            args.time = '0-12:00'
+            args.queue = 'nodelong'
 
       # Check if jobs exist
       for run_id in args.runs:
@@ -414,13 +419,12 @@ class RunManager:
 
          # Submit the job with given parameters
          try:
-            # Run particleconversion if asked to
-            if args.step == 'particleconversion':
-               command = 'bsub -q {args.queue} -W {args.time} -app Reserve2G -J {args.step[0]}{run.id:0>4} {scripts_path}/job_particleconversion {run.output_path} {run.run_path}'.format(
-                     args=args, run=run, scripts_path=self.scripts_path)
-            else:
-               command = 'bsub -q {args.queue} -n {args.cores} -W {args.time} -R "span[ptile={args.cores}]" -app Reserve500M -J {args.step[0]}{run.id:0>4} {scripts_path}/job_{args.step} {run.output_path} {run.run_path}'.format(
-                     args=args, run=run, scripts_path=self.scripts_path)
+            command = ('sbatch -A {args.account} --mail-type=END,FAIL --partition={args.queue} --ntasks=1'
+                        ' --cpus-per-task={args.cores} --mem-per-cpu={memory}MB -t {args.time}'
+                        ' --job-name="{args.step[0]}{run.id:0>4}"'
+                        ' -o "{run.output_path}/{args.step}.slurm-log"'
+                        ' {scripts_path}/job_{args.step} {run.output_path} {run.run_path}'
+                      ).format(args=args, memory=args.memory, run=run, scripts_path=self.scripts_path)
             check_output(command, shell=True)
          except CalledProcessError as e:
             print('An error occured submitting the job.')
@@ -464,9 +468,9 @@ class RunManager:
 
       # Get running jobs
       try:
-         bjobs_response = check_output('bjobs | egrep -wo " [adp][0-9]{4}"', shell=True,
+         squeue_response = check_output('squeue -u $USER -l | egrep -wo " [adp][0-9]{4}"', shell=True,
                stderr=DEVNULL).decode('utf-8')
-         running_jobs = [ ( int(s.strip()[1:]), s.strip()[0] ) for s in bjobs_response.splitlines() ]
+         running_jobs = [ ( int(s.strip()[1:]), s.strip()[0] ) for s in squeue_response.splitlines() ]
       except CalledProcessError as e:
          print('No running jobs.')
          return
