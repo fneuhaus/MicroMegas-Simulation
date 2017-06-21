@@ -42,13 +42,6 @@ int main(int argc, char* argv[]) {
       )
    )
    ]]] */
-
-   const int maxAvalancheSize = 0; // constrains the maximum avalanche size, 0 means no limit
-   const double driftField = 600.0; // V/cm, should be positive for drift in -z direction
-   double areaXmin = -1.5, areaXmax = -areaXmin;
-   double areaYmin = -1.5, areaYmax = -areaYmin;
-   double areaZmin = 100.e-4, areaZmax = 1.; // begin and end of the drift region, 100µm above the mesh where the field gets inhomogeneous (value from: http://iopscience.iop.org/article/10.1088/1748-0221/6/06/P06011/pdf)
-
    //[[[end]]]
 
    TString inputfileName, outputfileName;
@@ -66,8 +59,6 @@ int main(int argc, char* argv[]) {
       cog.outl("inputfileName = \"{}\";".format(conf["drift"]["in_filename"]))
       cog.outl("outputfileName = \"{}\";".format(conf["drift"]["out_filename"]))
       ]]]*/
-      inputfileName = "/etapfs05/atlashpc/fneuhaus/micromegas-simulation/outfiles/particleconversion.root";
-      outputfileName = "/etapfs05/atlashpc/fneuhaus/micromegas-simulation/outfiles/drift.root";
       //[[[end]]]
    }
 
@@ -118,9 +109,6 @@ int main(int argc, char* argv[]) {
    cog.outl("gas->SetTemperature({}+273.15);".format(conf["detector"]["temperature"]))
    cog.outl("gas->SetPressure({} * 7.50062);".format(conf["detector"]["pressure"]))
    ]]]*/
-   gas->SetComposition("co2",7.0, "ar",93.0);
-   gas->SetTemperature(20.+273.15);
-   gas->SetPressure(100. * 7.50062);
    //[[[end]]]
    gas->EnableDrift();                    // Allow for drifting in this medium
    gas->SetMaxElectronEnergy(200.);
@@ -135,7 +123,6 @@ int main(int argc, char* argv[]) {
          cog.outl('gas->EnablePenningTransfer({}, 0., "{}");'.format(
             penning_r, gas))
    ]]]*/
-   gas->EnablePenningTransfer(0.5, 0., "ar");
    //[[[end]]]
 
    // homogeneous field in z direction in a box
