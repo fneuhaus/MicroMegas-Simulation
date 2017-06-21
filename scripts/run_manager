@@ -9,6 +9,7 @@ import glob
 from datetime import datetime
 from subprocess import call, check_output, CalledProcessError, STDOUT, DEVNULL
 import pickle
+from configparser import ConfigParser, ExtendedInterpolation
 
 
 class Run:
@@ -313,8 +314,12 @@ class RunManager:
          exit(1)
       run = self.runs[args.id]
 
+      # Load run configuration
+      conf = ConfigParser(interpolation=ExtendedInterpolation())
+      conf.read(os.path.join(run.run_path, 'simulation.conf'))
+
       def print_prop(name, value, format_string=''):
-         print(('\033[34m{: <15}:\033[m {' + format_string + '}').format(name, value))
+         print(('\033[34m{: <20}:\033[m {' + format_string + '}').format(name, value))
       print_prop('ID:', run.id)
       print_prop('Name:', run.name)
       print_prop('Message:', run.message)
@@ -322,6 +327,15 @@ class RunManager:
       print_prop('Run path:', run.run_path)
       print_prop('Output path:', run.output_path)
       print_prop('Created at', run.created_at, format_string=':%Y-%m-%d %H:%M')
+      print()
+      print_prop('Particles:', '{} {}s with E={} keV'.format(
+         conf['general']['number_of_particles'], conf['general']['particle_type'],
+         conf['general']['particle_energy']))
+      if conf['detector']['penning_transfer_enable']:
+         penning_gases = eval(conf['detector']['penning_transfer_gas'])
+         print_prop('Penning transfer', ', '.join([ '{}: {:.2f}%'.format(gas, penning_r * 100) for gas, penning_r in penning_gases.items() ]))
+      print_prop('Drift field', '{} V/cm'.format(conf['drift']['field']))
+      print_prop('Amplification field', '{} V/cm'.format(conf['amplification']['field']))
 
    def run(self, argv):
       """ Run the specified jobs.  """
