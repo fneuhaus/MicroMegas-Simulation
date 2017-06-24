@@ -21,9 +21,14 @@ class Run:
       self.run_path = run_path
       self.output_path = output_path
       self.created_at = created_at if created_at else datetime.now()
+      self.last_runs = { 'particleconversion': None, 'drift': None, 'avalanche': None }
 
    def get_id(self):
       return '{:0>4}'.format(self.id)
+
+   def __setstate__(self, state):
+      self.__dict__['last_runs'] = { 'particleconversion': None, 'drift': None, 'avalanche': None }
+      self.__dict__.update(state)
 
 
 def run_list(s):
@@ -158,6 +163,12 @@ class RunManager:
          return result if result else False
 
    def __compile(self, run):
+      # Create necessary folders
+      if not os.path.exists(run.run_path):
+         os.mkdir(run.run_path)
+      if not os.path.exists(run.output_path):
+         os.mkdir(run.output_path)
+
       # Make the project
       logfile_path = os.path.join(run.run_path, 'make.log')
       print('Building source...')
@@ -175,6 +186,8 @@ class RunManager:
          copy2(f, os.path.join(run.run_path, os.path.basename(f)))
       copy2(os.path.join(self.simulation_path, 'drift', 'drift'), os.path.join(run.run_path, 'drift'))
       copy2(os.path.join(self.simulation_path, 'avalanche', 'avalanche'), os.path.join(run.run_path, 'avalanche'))
+      if os.path.exists(os.path.join(run.run_path, 'geometry')):
+         rmtree(os.path.join(run.run_path, 'geometry'))
       copytree(os.path.join(self.simulation_path, 'avalanche', 'geometry'), os.path.join(run.run_path, 'geometry'))
 
       # Copy the simulation.conf to be able to tell the parameters later
@@ -202,6 +215,8 @@ class RunManager:
          help='Description for the new run.')
       parser.add_argument('--mesh', default=None,
          help='Path to the mesh file to use.')
+      parser.add_argument('--gap-size', default=None, type=int,
+         help='Amplification gap size in um.')
       parser.add_argument('--particleconversion', default=None,
          help='Use this file as input from particleconversion.')
       args = parser.parse_args(argv)
@@ -240,15 +255,22 @@ class RunManager:
          print('The output path already exists. This means something is wrong -> stopping here.')
          exit(1)
 
-      # Create the folders
-      os.mkdir(run.run_path)
-      os.mkdir(run.output_path)
-
       # Copy the mesh file to the avalanche directory
       if args.mesh:
          copy2(args.mesh, os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'))
 
+      # Change gap size in config file
+      copy2(os.path.join(self.simulation_path, 'simulation.conf'), os.path.join(self.simulation_path, 'simulation.conf.orig'))
+      if args.gap_size:
+         conf = ConfigParser(interpolation=ExtendedInterpolation())
+         conf.read(os.path.join(self.simulation_path, 'simulation.conf'))
+         conf['amplification']['gap'] = '{}'.format(args.gap_size * 1e-4)
+         with open(os.path.join(self.simulation_path, 'simulation.conf'), 'w') as config_file:
+            conf.write(config_file)
+
       self.__compile(run)
+      if os.path.exists(os.path.join(self.simulation_path, 'simulation.conf.orig')):
+         os.rename(os.path.join(self.simulation_path, 'simulation.conf.orig'), os.path.join(self.simulation_path, 'simulation.conf'))
 
       # Copy particleconversion input file
       if args.particleconversion:
@@ -293,10 +315,14 @@ class RunManager:
          print('There are no runs listed yet.')
          exit(0)
 
-      print('     Created     |  ID  |         Name         |                Description             ')
-      print('-----------------|------|----------------------|----------------------------------------')
+      def format_date(date):
+         return '{:%Y-%m-%d %H:%M}'.format(date) if date else '----'
+
+      print('     Created     |  ID  |         Name         |                 Description              | Particleconversion |      Drift       |    Avalanche   ')
+      print('-----------------|------|----------------------|------------------------------------------|--------------------|------------------|----------------')
       for run_id, run in self.runs.items():
-         print('{:%Y-%m-%d %H:%M} | {:0>4} | {: <20} | {: <40}'.format(run.created_at, run.id, run.name[:20], run.message[:40]))
+         print(('{:%Y-%m-%d %H:%M} | {:0>4} | {: <20} | {: <40} | {: <18} | {: <16} | {: <16}').format(run.created_at, run.id, run.name[:20],
+            run.message[:40], format_date(run.last_runs['particleconversion']), format_date(run.last_runs['drift']), format_date(run.last_runs['avalanche'])))
 
    def details(self, argv):
       parser = argparse.ArgumentParser(
@@ -335,6 +361,7 @@ class RunManager:
          penning_gases = eval(conf['detector']['penning_transfer_gas'])
          print_prop('Penning transfer', ', '.join([ '{}: {:.2f}%'.format(gas, penning_r * 100) for gas, penning_r in penning_gases.items() ]))
       print_prop('Drift field', '{} V/cm'.format(conf['drift']['field']))
+      print_prop('Amplification gap', '{} µm'.format(conf['amplification']['gap']))
       print_prop('Amplification field', '{} V/cm'.format(conf['amplification']['field']))
 
    def run(self, argv):
@@ -409,6 +436,8 @@ class RunManager:
                         ' {scripts_path}/job_{args.step} {run.output_path} {run.run_path}'
                       ).format(args=args, memory=args.memory, run=run, scripts_path=self.scripts_path)
             check_output(command, shell=True)
+            run.last_runs[args.step] = datetime.now()
+            self.__write_log()
          except CalledProcessError as e:
             print('An error occured submitting the job.')
             print(e)
@@ -447,16 +476,23 @@ class RunManager:
 
       parser.add_argument('-d', '--detailed', action='store_true',
             help='give a more detailed status.')
+      parser.add_argument('-r', '--run', type=int, default=None,
+            help='give status for specified run.')
+      parser.add_argument('--step', default=None,
+            help='give status for step.')
       args = parser.parse_args(argv)
 
-      # Get running jobs
-      try:
-         squeue_response = check_output('squeue -u $USER -l | egrep -wo " [adp][0-9]{4}"', shell=True,
-               stderr=DEVNULL).decode('utf-8')
-         running_jobs = [ ( int(s.strip()[1:]), s.strip()[0] ) for s in squeue_response.splitlines() ]
-      except CalledProcessError as e:
-         print('No running jobs.')
-         return
+      if not args.run:
+         # Get running jobs
+         try:
+            squeue_response = check_output('squeue -u $USER -l | egrep -wo " [adp][0-9]{4}"', shell=True,
+                  stderr=DEVNULL).decode('utf-8')
+            running_jobs = [ ( int(s.strip()[1:]), s.strip()[0] ) for s in squeue_response.splitlines() ]
+         except CalledProcessError as e:
+            print('No running jobs.')
+            return
+      else:
+         running_jobs = [ ( args.run, args.step[0] ) ]
 
       # Get terminal width for beautiful output
       terminal_rows, terminal_columns = [ int(a) for a in os.popen('stty size', 'r').read().split() ]
@@ -517,7 +553,8 @@ class RunManager:
             print(run.output_path)
             print(run.run_path)
 
-            if input('Are you shure you want to delete the following files? [y/n]').lower() == 'y':
+            result = input('Are you shure you want to delete the following files? [Y/n] ').lower()
+            if result == 'y' or result == '':
                rmtree(run.output_path)
                rmtree(run.run_path)
                self.runs.pop(run.id)

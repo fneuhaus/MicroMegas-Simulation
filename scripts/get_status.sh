@@ -11,8 +11,9 @@ for FILE in *_${STEP}.log; do
       PROGRESS="${PROGRESS//$'\r'/$''}"
    fi
    if [ "$STEP" == "avalanche" ]; then
-      PROGRESS=`tac $FILE | grep -o -m 1 -e "Done." -e "^[0-9]*[\.0-9]*% of all events"`
+      PROGRESS=`tac $FILE | grep -o -m 1 -e "Done." -e "^[ ]*[0-9]*[\.0-9]*% of all events"`
       PROGRESS="${PROGRESS//$' of all events'/$''}"
+      PROGRESS="${PROGRESS//$' '/$''}"
    fi
    STATUS=$?
    if [ "$STATUS" != "0" ] || [ "$PROGRESS" == "" ]; then
