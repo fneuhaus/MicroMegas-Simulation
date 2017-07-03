@@ -44,11 +44,11 @@ def run_list(s):
       return [ int(s) ]
 
    # Range of runs
-   if re.match('^[0-9]*\-[0-9]*', s):
-      run_low, run_high = s.split('-')
+   if re.match('^[0-9]*\-[0-9]*$', s):
+      run_low, run_high = map(int, s.split('-'))
       if run_low > run_high:
          raise argparse.ArgumentTypeError('List range of jobs in ascending order. (e.g. 1-8 not 8-1)')
-      return list(range(int(run_low), int(run_high) + 1))
+      return list(range(run_low, run_high + 1))
 
    # List of runs
    if s.startswith('[') and s.endswith(']'):
@@ -56,10 +56,10 @@ def run_list(s):
       s = s[1:-1].replace(' ', '')
       for item in s.split(','):
          if re.match('^[0-9]*\-[0-9]*', item):
-            run_low, run_high = item.split('-')
+            run_low, run_high = map(int, item.split('-'))
             if run_low > run_high:
                raise argparse.ArgumentTypeError('List range of jobs in ascending order. (e.g. 1-8 not 8-1)')
-            jobs += list(range(int(run_low), int(run_high) + 1))
+            jobs += list(range(run_low, run_high + 1))
          else:
             jobs.append(int(item))
       return jobs
@@ -563,6 +563,7 @@ class RunManager:
          print('---------------------------------------------------------------------')
 
       self.__write_log()
+
 
 if __name__ == '__main__':
    rm = RunManager(sys.argv)
