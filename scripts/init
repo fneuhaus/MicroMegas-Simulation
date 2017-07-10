@@ -12,7 +12,7 @@ export DRIFT_EXEC=$MICROMEGAS_HOME/simulation/drift/drift
 export AVALANCHE_EXEC=$MICROMEGAS_HOME/simulation/avalanche/avalanche
 
 # Load cmake
-module load software/cmake/3.6.3
+module load devel/CMake/3.8.0-intel-2017.02
 
 # Initialize ROOT
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
@@ -23,7 +23,7 @@ lsetup "root 5.34.25-x86_64-slc6-gcc48-opt" >/dev/null 2>&1
 source $HOME/software/python/bin/activate
 
 # Initialize GCC
-module load gcc/4.8.5
+module load compiler/GCC/4.8.4
 export CC=$(which gcc)
 export CXX=$(which g++)
 

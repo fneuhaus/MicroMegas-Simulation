@@ -1,5 +1,7 @@
 #!/bin/bash
 
+JOB_DIR=/localscratch/$SLURM_JOBID
+
 if [ "$#" -ne 1 ] && [ "$#" -ne 2 ]; then
    echo "Usage: $(basename $0) DATA_DIRECTORY (RUN_DIRECTORY)"
    exit 1
@@ -23,11 +25,13 @@ if [ ! -d "$WD" ]; then
 fi
 
 # GNU Parallel
-module load software/gnu_parallel
+module load tools/parallel/20170622
 
 # run parallel on all split files
 # needs about ?M RAM per job
-find ${WD} -regextype posix-egrep -regex '^.*[0-9]+_drift.root$' | sed -nE 's|(.*)/([0-9]+)_drift\.root|\1 \2|p' | parallel --colsep " " -j 64 --delay 1 --progress --no-notice "$AVALANCHE_EXEC {1}/{2}_drift.root {1}/{2}_avalanche.root > {1}/{2}_avalanche.log"
+find ${WD} -regextype posix-egrep -regex '^.*[0-9]+_drift.root$' | sed -nE 's|(.*)/([0-9]+)_drift\.root|\1 \2|p' | parallel --colsep " " -j 64 --delay 1 --progress --no-notice "$AVALANCHE_EXEC {1}/{2}_drift.root {1}/{2}_avalanche.root > $JOB_DIR/{2}_avalanche.log"
+
+cp $JOB_DIR/*.log $WD/
 
 STATUS=$?
 exit $STATUS
