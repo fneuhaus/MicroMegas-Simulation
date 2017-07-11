@@ -28,23 +28,16 @@ export CC=$(which gcc)
 export CXX=$(which g++)
 
 # Initialize GEANT4
-pushd $HOME/software/geant4.10.03.p01/bin/ > /dev/null
-source geant4.sh
-popd > /dev/null
+module load own/geant4/current
 
 # Initialize garfield
-export GARFIELD_HOME=$HOME/software/garfield
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GARFIELD_HOME/lib"
-export HEED_DATABASE=$GARFIELD_HOME/Heed/heed++/database
+module load own/garfield/current
 
 # Elmer
-export ELMER_HOME=$HOME/software/elmerfem
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ELMER_HOME/lib
-export PATH=$PATH:$ELMER_HOME/bin
+module load own/elmerfem/current
 
 # gmsh
-export PATH=$HOME/software/gmsh/bin:$PATH
-export LD_LIBRARY_PATH=$HOME/software/oce/lib:$LD_LIBRARY_PATH
+module load own/gmsh/current
 
 # Pythonpath
 export PYTHONPATH=$MICROMEGAS_SIMULATION_PATH:$PYTHONPATH
