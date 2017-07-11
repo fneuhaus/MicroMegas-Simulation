@@ -75,9 +75,11 @@ int main(int argc, char* argv[]) {
    TTree* inputTree = (TTree*)inputFile->Get("detectorTree");
    Int_t numberOfEvents = inputTree->GetEntriesFast();
 
+   UInt_t inEventID;
    Double_t inPosX, inPosY, inPosZ;
    Double_t inPx, inPy, inPz;
    Double_t inEkin, inT;
+   inputTree->SetBranchAddress("eventID", &inEventID);
    inputTree->SetBranchAddress("PosX", &inPosX); inputTree->SetBranchAddress("PosY", &inPosY);  inputTree->SetBranchAddress("PosZ", &inPosZ);
    inputTree->SetBranchAddress("Px", &inPx); inputTree->SetBranchAddress("Py", &inPy); inputTree->SetBranchAddress("Pz", &inPz);
    inputTree->SetBranchAddress("Ekin", &inEkin);
@@ -85,6 +87,7 @@ int main(int argc, char* argv[]) {
    cout << "Reading " << numberOfEvents << " events from " << inputFile->GetPath() << endl;
 
    // Tree file
+   UInt_t eventID;
    Int_t nele;  // number of electrons in avalanche
    Int_t nelep; // number of electron end points
    vector<Int_t> status;
@@ -94,6 +97,7 @@ int main(int argc, char* argv[]) {
    TFile* outputFile = new TFile(outputfileName, "RECREATE");
    outputFile->cd();
    TTree* outputTree = new TTree("driftTree", "Drifts");
+   outputTree->Branch("eventID", &eventID, "eventID/I");
    outputTree->Branch("nele", &nele, "nele/I");
    outputTree->Branch("nelep", &nelep, "nelep/I");
    outputTree->Branch("status", &status);
@@ -113,6 +117,17 @@ int main(int argc, char* argv[]) {
    gas->EnableDrift();                    // Allow for drifting in this medium
    gas->SetMaxElectronEnergy(200.);
    gas->Initialise(true);
+
+   // Penning transfer
+   /*[[[cog
+   from MMconfig import *
+   if conf['detector'].getboolean('penning_transfer_enable'):
+      penning_gases = eval(conf['detector']['penning_transfer_gas'])
+      for gas, penning_r in penning_gases.items():
+         cog.outl('gas->EnablePenningTransfer({}, 0., "{}");'.format(
+            penning_r, gas))
+   ]]]*/
+   //[[[end]]]
 
    // homogeneous field in z direction in a box
    SolidBox* box = new SolidBox(0., 0., (areaZmax + areaZmin) / 2., (areaXmax - areaXmin) / 2., (areaYmax - areaYmin) / 2., (areaZmax - areaZmin) / 2.);
@@ -153,7 +168,7 @@ int main(int argc, char* argv[]) {
    for (int i = 0; i < numberOfEvents; i++) {
       // Set the initial position [cm], direction, starting time [ns] and initial energy [eV]
       inputTree->GetEvent(i, 0); // 0 get only active branches, 1 get all branches
-      inputTree->Show(i);
+      eventID = inEventID;
 
       TVector3 initialPosition = TVector3(inPosX, inPosY, inPosZ);
       TVector3 initialMomentum = TVector3(inPx, inPy, inPz);
