@@ -58,6 +58,7 @@ void OutputManager::FillEvent(TTree* tree, G4Track* track) {
    G4ThreeVector pos = track->GetPosition();
    G4ThreeVector dirVertex = track->GetVertexMomentumDirection();
    G4ThreeVector dir = track->GetMomentumDirection();
+   fEventID += 1;
    fPhiVertex = dirVertex.getPhi();
    fPhi = dir.getPhi();
    fThetaVertex = dirVertex.getTheta();
@@ -70,7 +71,7 @@ void OutputManager::FillEvent(TTree* tree, G4Track* track) {
    fPosX = pos.x() / cm;
    fPosY = pos.y() / cm;
    fPosZ = pos.z() / cm;
-   fT = track->GetGlobalTime() / ns;
+   fT = track->GetLocalTime() / ns;
    fEkinVertex = track->GetVertexKineticEnergy() / eV;
    fEkin = track->GetKineticEnergy() / eV;
    fEloss = track->GetVertexKineticEnergy() / eV - track->GetKineticEnergy() / eV;

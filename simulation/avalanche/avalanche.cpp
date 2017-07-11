@@ -73,14 +73,17 @@ int main(int argc, char * argv[]) {
    TTree* inputTree = (TTree*)inputFile->Get("driftTree");
    Int_t numberOfEvents = inputTree->GetEntriesFast();
 
+   Int_t inEventID;
    Int_t inNele;
    vector<Double_t> *inPosX = 0, *inPosY = 0, *inPosZ = 0, *inEkin = 0, *inT = 0;
+   inputTree->SetBranchAddress("eventID", &inEventID);
    inputTree->SetBranchAddress("x1", &inPosX); inputTree->SetBranchAddress("y1", &inPosY);   inputTree->SetBranchAddress("z1", &inPosZ);
    inputTree->SetBranchAddress("e1", &inEkin);
    inputTree->SetBranchAddress("t1", &inT);
    inputTree->SetBranchAddress("nele", &inNele);
    cout << "Reading " << numberOfEvents << " events from " << inputFile->GetPath() << endl;
 
+   Int_t eventID;
    Int_t nele_drift; // number of electrons from drift
    Int_t nele;  // number of electrons in avalanche
    Int_t nelep; // number of electron end points
@@ -93,6 +96,7 @@ int main(int argc, char * argv[]) {
    TFile* outputFile = new TFile(outputfileName, "RECREATE");
    outputFile->cd();
    TTree* outputTree = new TTree("avalancheTree", "Avalanches");
+   outputTree->Branch("eventID", &eventID);
    outputTree->Branch("nele_drift", &nele_drift, "nele_drift/I");
    outputTree->Branch("nele", &nele, "nele/I");
    outputTree->Branch("nelep", &nelep, "nelep/I");
@@ -226,6 +230,7 @@ int main(int argc, char * argv[]) {
       int numberOfElectrons;
 
       inputTree->GetEvent(i, 0); // 0 get only active branches, 1 get all branches
+      eventID = inEventID;
       //inputTree->Show(i);
       numberOfElectrons = inNele;
       nele_drift = numberOfElectrons;
@@ -264,8 +269,16 @@ int main(int argc, char * argv[]) {
          for (int j = 0; j < np; j++) {
             avalanchemicroscopic->GetElectronEndpoint(j, xi, yi, zi, ti, ei, xf, yf, zf, tf, ef, stat);
 
-            x0.push_back(xi); y0.push_back(yi); z0.push_back(zi); t0.push_back(ti); e0.push_back(ei);
-            x1.push_back(xf); y1.push_back(yf); z1.push_back(zf); t1.push_back(tf); e1.push_back(ef);
+            x0.push_back(xi); y0.push_back(yi); z0.push_back(zi); e0.push_back(ei);
+            x1.push_back(xf); y1.push_back(yf); z1.push_back(zf); e1.push_back(ef);
+            /*[[[cog
+            from MMconfig import *
+            if conf['amplification'].getboolean('use_local_time'):
+               cog.outl('t0.push_back(ti - initialTime); t1.push_back(tf - initialTime);')
+            else:
+               cog.outl('t0.push_back(ti); t1.push_back(tf);')
+            ]]]*/
+            //[[[end]]]
             status.push_back(stat);
          }
 

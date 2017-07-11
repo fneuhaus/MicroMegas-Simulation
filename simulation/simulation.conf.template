@@ -148,5 +148,8 @@
    # used to calculate the voltages for the ElmerSolver input file
    conversion_zone_height = 300e-4
 
+   # Use local time (use only the time in the amplification region)
+   use_local_time = 1
+
    # amplification field
    field = 40e3
