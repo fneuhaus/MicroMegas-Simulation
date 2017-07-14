@@ -215,13 +215,21 @@ int main(int argc, char * argv[]) {
    viewfield->SetCanvas(c1);
    viewfield->SetPlane(0., -1., 0., 0., 0., 0.);
    viewfield->SetComponent(fm);
-   viewfield->SetArea(areaXmin, areaZmin, areaXmax, 0);
+   viewfield->SetArea({x_min}, {z_min}, {x_max}, {z_max});
    viewfield->SetNumberOfContours(255);
    viewfield->SetNumberOfSamples2d({bins_x}, {bins_y});
    viewfield->PlotContour();
    c1->SaveAs("{filename}");
    delete viewfield;
-   delete c1;'''.format(bins_x=conf['amplification']['electric_field_xbins'], bins_y=conf['amplification']['electric_field_ybins'], filename=conf['amplification']['electric_field_path']))
+   delete c1;'''.format(bins_x=conf['amplification']['electric_field_xbins'],
+         bins_y=conf['amplification']['electric_field_ybins'],
+         x_min=conf['amplification']['electric_field_xmin'],
+         x_max=conf['amplification']['electric_field_xmax'],
+         z_min=conf['amplification']['electric_field_zmin'],
+         z_max=conf['amplification']['electric_field_zmax'],
+         filename=conf['amplification']['electric_field_path']))
+      if conf['amplification'].getboolean('plot_only'):
+         cog.outl('exit(0);')
    ]]]*/
    ///[[[end]]]
 
