@@ -63,16 +63,25 @@ def splitFile(args):
 		print('Found {} events in tree {}.'.format(nevents, args.tree))
 
 	if args.njobs:
-		args.nevents = int(math.ceil(float(nevents) / args.njobs))
-
-	event_blocks = list(enumerate([range(nevents)[i:i + args.nevents] for i in range(0, nevents, args.nevents)]))
+		# Number of jobs given, distribute the events over the files as evenly as possible
+		event_blocks = []
+		left_events = nevents
+		done_events = 0
+		for i in range(args.njobs):
+			events_for_block = int(math.ceil(float(left_events) / (args.njobs - i)))
+			event_blocks.append((i, range(nevents)[done_events:done_events + events_for_block + 1]))
+			left_events -= events_for_block
+			done_events += events_for_block
+	else:
+		event_blocks = list(enumerate([range(nevents)[i:i + args.nevents] for i in range(0, nevents, args.nevents)]))
 	last_block_num = event_blocks[-1][0]
+	file_num_length = max(3, len(str(last_block_num)))
 
 	for file_num, event_nums in event_blocks:
 		folder = os.path.dirname(args.inputFileName)
 		input_file_name = os.path.basename(args.inputFileName)
 		input_file_base, extension = os.path.splitext(input_file_name)
-		output_file_name = '{}/{}_{}{}'.format(folder, str(file_num).zfill(len(str(last_block_num))), input_file_base, extension)
+		output_file_name = '{}/{:0>{}}_{}{}'.format(folder, str(file_num), file_num_length, input_file_base, extension)
 		output_file_names.append(output_file_name)
 		output_file = TFile(output_file_name, 'recreate')
 		output_tree = input_tree.CloneTree(0)
