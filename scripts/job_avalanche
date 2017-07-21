@@ -2,36 +2,40 @@
 
 JOB_DIR=/localscratch/$SLURM_JOBID
 
-if [ "$#" -ne 1 ] && [ "$#" -ne 2 ]; then
-   echo "Usage: $(basename $0) DATA_DIRECTORY (RUN_DIRECTORY)"
+if [ "$#" -eq 0 ]; then
+   echo "Usage: $(basename $0) RUN_DIRECTORY INPUT_FILES"
    exit 1
 fi
 
 # ROOT and Garfield++ setup
 [[ ! -e "$AVALANCHE_EXEC" ]] && source $(dirname `readlink -f $0`)/init
 
+# Get working directory and set executable path
 WD="$(readlink -f $1)"
-if [ "$#" -eq 2 ]; then
-   echo $2
-   cd $2
-   export AVALANCHE_EXEC="$2/avalanche"
-fi
+cd $WD
+export AVALANCHE_EXEC="$WD/avalanche"
+
+# Shift parameters so only files are in list now
+shift
+OUTPUT_DIR=`dirname $1`
 
 echo "Using simulation directory: $WD"
-
-if [ ! -d "$WD" ]; then
-   echo "Input directory: $WD does not exist!"
-   exit 1
-fi
 
 # GNU Parallel
 module load tools/parallel/20170622
 
-# run parallel on all split files
+# run parallel on all given files
 # needs about ?M RAM per job
-find ${WD} -regextype posix-egrep -regex '^.*[0-9]+_drift.root$' | sed -nE 's|(.*)/([0-9]+)_drift\.root|\1 \2|p' | parallel --colsep " " -j 64 --delay 1 --progress --no-notice "$AVALANCHE_EXEC {1}/{2}_drift.root {1}/{2}_avalanche.root > $JOB_DIR/{2}_avalanche.log"
+{ for f in $*; do
+   filename=`basename $f`
+   echo $f $JOB_DIR/${filename/_drift/_avalanche} $JOB_DIR/${filename/_drift.root/_avalanche.log}
+done
+} | parallel --colsep " " -j $# --delay 1 --no-notice "$AVALANCHE_EXEC {1} {2} > {3}"
 
-cp $JOB_DIR/*.log $WD/
+
+# Copy logs and output files to data directory
+cp $JOB_DIR/*.log $OUTPUT_DIR/
+cp $JOB_DIR/*.root $OUTPUT_DIR/
 
 STATUS=$?
 exit $STATUS

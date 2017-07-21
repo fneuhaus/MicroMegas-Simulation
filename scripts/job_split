@@ -1,26 +1,32 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
-   echo "Usage: $(basename $0) DIRECTORY"
+if [ "$#" -ne 1 ] && [ "$#" -ne 2 ]; then
+   echo "Usage: $(basename $0) FILENAME (NUMBER OF SPLITS)"
    exit 1
 fi
 
 # ROOT and Garfield++ setup
 [[ ! -e "$DRIFT_EXEC" ]] && source $(dirname `readlink -f $0`)/init
 
-WD="$1"
+INPUT_FILE="$1"
+WD=`dirname $INPUT_FILE`
 
-INPUT_FILE="particleconversion.root"
+# Number of splits (use 64 as default)
+NUM_SPLITS=64
+if [ "$#" -eq 2 ]; then
+   NUM_SPLITS=$2
+fi
+
 SPLIT_SCRIPT="$SCRIPTS_PATH/splitFile.py"
 
 echo "Using simulation directory: $WD"
 
-if [ ! -e "$WD/$INPUT_FILE" ]; then
+if [ ! -e "$INPUT_FILE" ]; then
    echo "Input file: $INPUT_FILE does not exist!"
    exit 1
 fi
 
-$SPLIT_SCRIPT -j 64 -t detectorTree $WD/$INPUT_FILE > $WD/split.log
+$SPLIT_SCRIPT -j $NUM_SPLITS $INPUT_FILE > $WD/split.log
 
 STATUS=$?
 exit $STATUS
