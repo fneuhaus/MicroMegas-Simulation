@@ -84,7 +84,15 @@ End
 ! Readout
 Boundary Condition 3
   Target Boundaries(1) = 5 
-  ![[[cog from MMconfig import *; cog.outl("Potential = {}".format(float(conf["amplification"]["field"]) * float(conf["amplification"]["gap"]))) ]]]
+  ![[[cog
+  !from MMconfig import *
+  !if conf['amplification']['define_field_by'] == 'field':
+  !   cog.outl('Potential = {}'.format(float(conf["amplification"]["field"]) * float(conf["amplification"]["gap"])))
+  !elif conf['amplification']['define_field_by'] == 'voltage':
+  !   cog.outl('Potential = {}'.format(float(conf["amplification"]["voltage"])))
+  !else:
+  !   raise ValueError('Amplification field has to be defined either by field or voltage!')
+  !]]]
   ![[[end]]]
   Name = "Readout"
 End

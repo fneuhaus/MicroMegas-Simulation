@@ -152,4 +152,7 @@
    use_local_time = 1
 
    # amplification field
+   # can be defined by 'field' (in V/cm) or 'voltage' (in V)
+   define_field_by = voltage
    field = 40e3
+   voltage = 500
