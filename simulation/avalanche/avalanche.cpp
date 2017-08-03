@@ -277,8 +277,16 @@ int main(int argc, char * argv[]) {
          for (int j = 0; j < np; j++) {
             avalanchemicroscopic->GetElectronEndpoint(j, xi, yi, zi, ti, ei, xf, yf, zf, tf, ef, stat);
 
-            x0.push_back(xi); y0.push_back(yi); z0.push_back(zi); e0.push_back(ei);
-            x1.push_back(xf); y1.push_back(yf); z1.push_back(zf); e1.push_back(ef);
+            /*[[[cog
+            from MMconfig import *
+            if conf['amplification'].getboolean('save_electron_coordinates'):
+               cog.outl('x0.push_back(xi); y0.push_back(yi); z0.push_back(zi);')
+               cog.outl('x1.push_back(xf); y1.push_back(yf); z1.push_back(zf);')
+            ]]]*/
+            //[[[end]]]
+            e0.push_back(ei);
+            e1.push_back(ef);
+
             /*[[[cog
             from MMconfig import *
             if conf['amplification'].getboolean('use_local_time'):

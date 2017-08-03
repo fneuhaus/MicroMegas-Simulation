@@ -113,6 +113,9 @@
    # path of the geometry files
    geometry_path = ${general:project_path}/avalanche/geometry
 
+   # enable saving of coordinates
+   save_electron_coordinates = 0
+
    # enable signal calculation
    signal_calculation_enable = True 
    signal_calculation_t_min = 0
