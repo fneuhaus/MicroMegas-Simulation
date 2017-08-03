@@ -1,4 +1,6 @@
 #!/bin/bash
+set -o errexit
+set -o nounset
 
 project_path=$(dirname $0)
 project_path=$(readlink -e $project_path)

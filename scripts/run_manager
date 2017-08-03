@@ -13,6 +13,12 @@ import pickle
 from configparser import ConfigParser, ExtendedInterpolation
 
 
+class CompilationError(Exception):
+   def __init__(self, message, logfile_path):
+      self.message = message
+      self.logfile_path = logfile_path
+
+
 class Run:
    def __init__(self, id, name, message='', commit='', run_path='', output_path='', created_at=None):
       self.id = id
@@ -176,9 +182,8 @@ class RunManager:
       build_result = call(os.path.join(self.simulation_path, 'build.sh'),
             shell=True, stdout=open(logfile_path, 'w'), stderr=STDOUT)
       if build_result:
-         print('An error occured when compiling. The build script exited with {}.'.format(build_result))
-         print('See {} for more details.'.format(logfile_path))
-         exit(1)
+         raise CompilationError(build_result, logfile_path)
+
       print('Building successfully executed.')
 
       # Copy the generated executables and mesh files to the run folder
@@ -197,8 +202,7 @@ class RunManager:
       # Clean the source directory
       print('Cleaning source...')
       if call(os.path.join(self.simulation_path, 'clear.sh'), shell=True, stdout=DEVNULL, stderr=DEVNULL):
-         print('A problem was detected while cleaning the source. Exiting now.')
-         exit(1)
+         raise CompilationError('Error while cleaning build directories.', None)
       print('Clean successfully executed.')
 
    def create(self, argv):
@@ -258,10 +262,12 @@ class RunManager:
 
       # Copy the mesh file to the avalanche directory
       if args.mesh:
+         os.rename(os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'),
+               os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step.orig'))
          copy2(args.mesh, os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'))
 
       # Change gap size in config file
-      copy2(os.path.join(self.simulation_path, 'simulation.conf'), os.path.join(self.simulation_path, 'simulation.conf.orig'))
+      os.rename(os.path.join(self.simulation_path, 'simulation.conf'), os.path.join(self.simulation_path, 'simulation.conf.orig'))
       if args.gap_size:
          conf = ConfigParser(interpolation=ExtendedInterpolation())
          conf.read(os.path.join(self.simulation_path, 'simulation.conf'))
@@ -269,19 +275,36 @@ class RunManager:
          with open(os.path.join(self.simulation_path, 'simulation.conf'), 'w') as config_file:
             conf.write(config_file)
 
-      self.__compile(run)
-      if os.path.exists(os.path.join(self.simulation_path, 'simulation.conf.orig')):
-         os.rename(os.path.join(self.simulation_path, 'simulation.conf.orig'), os.path.join(self.simulation_path, 'simulation.conf'))
+      try:
+         self.__compile(run)
+      except CompilationError as e:
+         print('An error occured while compiling the code.')
+         copy2(e.logfile_path, '/tmp/micromegas_make.log')
+         if e.logfile_path:
+            print('For more information see {}'.format('/tmp/micromegas_make.log'))
 
-      # Copy particleconversion input file
-      if args.particleconversion:
-         copy2(args.particleconversion, os.path.join(run.output_path, 'particleconversion.root'))
-         print('Copied {} as particleconversion input file.'.format(args.particleconversion))
+         # Remove output and run folder
+         if os.path.exists(run.run_path):
+            rmtree(run.run_path)
+         if os.path.exists(run.output_path):
+            rmtree(run.output_path)
+      else:
+         # Copy particleconversion input file
+         if args.particleconversion:
+            copy2(args.particleconversion, os.path.join(run.output_path, 'particleconversion.root'))
+            print('Copied {} as particleconversion input file.'.format(args.particleconversion))
 
-      # Add entry to runlog and save it
-      self.runs[run.id] = run
-      self.__write_log()
-      print('A new run configuration with id {} was successfully created!'.format(run.id))
+         # Add entry to runlog and save it
+         self.runs[run.id] = run
+         self.__write_log()
+         print('A new run configuration with id {} was successfully created!'.format(run.id))
+      finally:
+         if os.path.exists(os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step.orig')):
+            os.rename(os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step.orig'),
+                  os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'))
+         if os.path.exists(os.path.join(self.simulation_path, 'simulation.conf.orig')):
+            os.rename(os.path.join(self.simulation_path, 'simulation.conf.orig'), 
+                  os.path.join(self.simulation_path, 'simulation.conf'))
 
    def recreate(self, argv):
       parser = argparse.ArgumentParser(
@@ -302,14 +325,26 @@ class RunManager:
          print('Recompiling job {:0>4}'.format(run.id))
 
          # Copy the simulation file to the simulation directory
+         os.rename(os.path.join(self.simulation_path, 'simulation.conf'),
+               os.path.join(self.simulation_path, 'simulation.conf.orig'))
          copy2(os.path.join(run.run_path, 'simulation.conf'),
                os.path.join(self.simulation_path, 'simulation.conf'))
 
          # Copy the mesh file to the avalanche directory
+         os.rename(os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'),
+               os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step.orig'))
          copy2(os.path.join(run.run_path, 'geometry/geometry.step'),
                os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'))
 
-         self.__compile(run)
+         try:
+            self.__compile(run)
+         finally:
+            if os.path.exists(os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step.orig')):
+               os.rename(os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step.orig'),
+                     os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'))
+            if os.path.exists(os.path.join(self.simulation_path, 'simulation.conf.orig')):
+               os.rename(os.path.join(self.simulation_path, 'simulation.conf.orig'),
+                     os.path.join(self.simulation_path, 'simulation.conf'))
 
    def ls(self, argv):
       if not self.runs:
