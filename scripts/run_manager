@@ -267,7 +267,7 @@ class RunManager:
          copy2(args.mesh, os.path.join(self.simulation_path, 'avalanche', 'geometry', 'geometry.step'))
 
       # Change gap size in config file
-      os.rename(os.path.join(self.simulation_path, 'simulation.conf'), os.path.join(self.simulation_path, 'simulation.conf.orig'))
+      copy2(os.path.join(self.simulation_path, 'simulation.conf'), os.path.join(self.simulation_path, 'simulation.conf.orig'))
       if args.gap_size:
          conf = ConfigParser(interpolation=ExtendedInterpolation())
          conf.read(os.path.join(self.simulation_path, 'simulation.conf'))
