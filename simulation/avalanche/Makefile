@@ -37,8 +37,9 @@ geometry/geometry.msh: geometry/geometry.step
 clean-cog:
 	cog.py -x -r avalanche.cpp
 	cog.py -x -r geometry/calculate_field.sif
+	rm geometry/geometry.msh
+	rm geometry/geometry/field.result
 
 clean:
 	make clean-cog
-	rm geometry/geometry/field.result 
 	
