@@ -35,17 +35,16 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hpp)
 file(GLOB macros ${PROJECT_SOURCE_DIR}/*.mac)
 file(GLOB cog_conf ${PROJECT_SOURCE_DIR}/../simulation.conf)
 
-# Target for source file generation
-add_custom_command(
-	OUTPUT ${main_source} ${sources} ${headers} ${macros}
-	COMMAND ${COG_EXEC} -r ${main_source} ${sources} ${headers} ${macros}
-	DEPENDS ${cog_conf}
-	COMMENT "Cogging source files..."
-)
 
 # Add the executable, and link it to the Geant4 libraries
 add_executable(particleconversion particleconversion.cpp ${sources} ${headers})
 target_link_libraries(particleconversion ${ROOT_LIBRARIES} ${Geant4_LIBRARIES})
+
+# Target for source file generation
+add_custom_target(recog
+	COMMAND ${COG_EXEC} -r ${main_source} ${sources} ${headers} ${macros}
+	COMMENT "Cogging source files..."
+)
 
 # Remove cog output from files
 add_custom_target(clean-cog
@@ -53,15 +52,12 @@ add_custom_target(clean-cog
 	COMMENT "Remove cog output from files"
 )
 
-# Remove cog output from files
-add_custom_target(recog
-	COMMAND ${COG_EXEC} -r ${main_source} ${sources} ${headers} ${macros}
-	COMMENT "Recog files"
-)
-
 # Make sure that only one target uses the sources at once
-add_custom_target(CogFiles DEPENDS ${main_source}  ${sources} ${headers} ${macros} COMMENT "Checking if re-cogging is required")
-add_dependencies(particleconversion CogFiles)
+add_custom_command(
+   OUTPUT particleconversion_phony
+   COMMAND make recog
+)
+add_dependencies(particleconversion recog)
 
 # For internal Geant4 use - but has no effect if you build this standalone
 add_custom_target(MM DEPENDS particleconversion)
