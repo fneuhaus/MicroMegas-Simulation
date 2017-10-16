@@ -1,0 +1,479 @@
+#!/usr/bin/env python3
+import os
+import sys
+import math
+from shutil import copy2, copytree, rmtree
+import argparse
+import tempfile
+import glob
+from datetime import datetime
+from subprocess import call, check_output, CalledProcessError, STDOUT, DEVNULL
+from configparser import ConfigParser, ExtendedInterpolation
+from mmsimulation import Run, RunGroup, run_list, Base, CompilationError
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from prettytable import PrettyTable
+
+
+class RunManager:
+   def __init__(self, argv):
+      # Load environment variables
+      self.editor = os.environ.get('EDITOR', 'vim')
+
+      # Create database session
+      self.__create_session()
+
+      # Parse arguments and execute given action
+      parser = argparse.ArgumentParser(
+         description='Create run configurations for the simulation on mogon.',
+         usage='''runmanager <command> [<args>]
+
+         The most commonly used commands are:
+         create     Create a new run configuration from the current code
+         run        Run an already existing configuration
+         ls         List the existing configurations
+         remove     Remove an existing configuration
+      ''')
+      parser.add_argument('command', help='Subcommand to run')
+      args = parser.parse_args(argv[1:2])
+      if not hasattr(self, args.command):
+         print('Command `{}` is not known.'.format(args.command))
+         parser.print_help()
+         exit(1)
+      getattr(self, args.command)(argv[2:])
+
+   def __create_session(self):
+      engine = create_engine(os.path.expandvars('sqlite:///$MICROMEGAS_RUN_DATABASE'))
+      Base.metadata.create_all(engine)
+      Base.metadata.bind = engine
+      db_session = sessionmaker(bind=engine)
+      self.session = db_session()
+
+   def __show_editor(self, text=''):
+      """ Open the specified EDITOR to make interactive input of multiple lines easier (as git does). """
+      with tempfile.NamedTemporaryFile(suffix='.tmp') as tf:
+         if text:
+            text = '\n\n' + '\n'.join([ '# ' + t for t in text.split('\n') ])
+            tf.write(text.encode('utf-8'))
+            tf.flush()
+         call([ self.editor, tf.name ])
+         tf.seek(0)
+         result = tf.read().decode('utf-8')
+         result = '\n'.join([ line for line in result.split('\n') if not line.startswith('#') ]).strip()
+         return result if result else False
+
+   def create(self, argv):
+      """ Create a new run.
+
+      This will created the new run in the log, compile the source, copy it to the run folder and clean the source folder.
+      """
+      parser = argparse.ArgumentParser(
+         description='Create a new run configuration based on the current simulation.conf and code.'
+      )
+      parser.add_argument('name', help='Name for the run.')
+      parser.add_argument('--id', default=None, type=int,
+         help='Give a custom ID for the run (not recommended).')
+      parser.add_argument('-m', '--message', default=None,
+         help='Description for the new run.')
+      parser.add_argument('--mesh', default=None,
+         help='Path to the mesh file to use.')
+      parser.add_argument('--gap-size', default=None, type=int,
+         help='Amplification gap size in um.')
+      parser.add_argument('--group', default=None,
+            help='Add run to this rungroup (can be name or ID)')
+      args = parser.parse_args(argv)
+
+      # Find the group if given
+      if args.group:
+         if args.group.isnumeric():
+            group_query = self.session.query(RunGroup).filter(RunGroup.id == int(args.group))
+         else:
+            group_query = self.session.query(RunGroup).filter(RunGroup.name == args.group)
+         if group_query.count() is not 1:
+            print('The given group identifier is ambiguous or does not match any group. Found matches:')
+            for group in group_query:
+               print('{} - {}'.format(group.id, group.name))
+            else:
+               print('No matches found.')
+            exit(1)
+         args.group = group_query.one()
+
+      # If no description is given ask for one interactively
+      if not args.message:
+         args.message = self.__show_editor(
+            'Enter a description for this run.\nAn empty file will abort the operation.')
+      # Abort if the message is still empty
+      if not args.message:
+         print('The description is left empty so no new run is created.')
+         exit(1)
+
+      # Check mesh input file
+      if args.mesh:
+         if not os.path.isfile(args.mesh):
+            print('The input file for the mesh does not exist. Stop here.')
+            exit(1)
+
+      # Create a new run
+      run = Run(name=args.name, message=args.message, group=args.group, created_at=datetime.now())
+      self.session.add(run)
+      self.session.flush()
+      self.session.refresh(run)
+      run.run_path = os.path.join('$MICROMEGAS_RUN_PATH', 'run{}'.format(run.get_id()))
+      run.output_path = os.path.join('$MICROMEGAS_OUTPUT_PATH', 'run{}'.format(run.get_id()))
+
+      # Check if run or output path exists (if so stop, because somethings wrong then...)
+      if os.path.exists(run.get_run_path()):
+         print('The run path already exists. This means something is wrong -> stopping here.')
+         exit(1)
+      if os.path.exists(run.get_output_path()):
+         print('The output path already exists. This means something is wrong -> stopping here.')
+         exit(1)
+
+      # Create folders
+      run.create_folders()
+
+      # Copy the mesh file to the avalanche directory
+      if args.mesh:
+         if not os.path.exists(os.path.join(run.get_run_path(), 'geometry')):
+            os.mkdir(os.path.join(run.get_run_path(), 'geometry'))
+         copy2(args.mesh, os.path.join(run.get_run_path(), 'geometry', 'geometry.step'))
+
+      # Change gap size in config file
+      copy2(os.path.expandvars('$MICROMEGAS_SIMULATION_PATH/simulation.conf'),
+            os.path.join(run.get_run_path(), 'simulation.conf'))
+      if args.gap_size:
+         conf = ConfigParser(interpolation=ExtendedInterpolation())
+         conf.read(os.path.join(run.get_run_path(), 'simulation.conf'))
+         conf['amplification']['gap'] = '{}'.format(args.gap_size * 1e-4)
+         with open(os.path.join(run.get_run_path(), 'simulation.conf'), 'w') as config_file:
+            conf.write(config_file)
+
+      try:
+         run.compile()
+      except CompilationError as e:
+         print('An error occured while compiling the code.')
+         print('For more information see {}'.format('/tmp/micromegas_make.log'))
+      else:
+         # Add entry to runlog and save it
+         self.session.commit()
+         print('A new run configuration with id {} was successfully created!'.format(run.id))
+
+   def create_group(self, argv):
+      parser = argparse.ArgumentParser(
+         description='Create a new run configuration based on the current simulation.conf and code.'
+      )
+      parser.add_argument('name', help='Name for the group.')
+      parser.add_argument('--description', default=None,
+         help='Description for the new group.')
+      args = parser.parse_args(argv)
+
+      # If no description is given ask for one interactively
+      if not args.description:
+         args.description = self.__show_editor(
+            'Enter a description for this group.\nAn empty file will abort the operation.')
+      # Abort if the description is still empty
+      if not args.description:
+         print('The description is left empty so no new group is created.')
+         exit(1)
+
+      # Create a new run
+      run_group = RunGroup(name=args.name, description=args.description)
+      self.session.add(run_group)
+      self.session.commit()
+
+   def recreate(self, argv):
+      parser = argparse.ArgumentParser(
+         description='Remake an existing configuration based on the original \
+         simulation.conf, but with new code.'
+      )
+      parser.add_argument('runs', help='ID of the run(s). Supported formats: \
+            "1", "1-3", "[1, 5-9]"', type=run_list)
+      args = parser.parse_args(argv)
+
+      # Check if jobs exist
+      runs = self.session.query(Run).filter(Run.id.in_(args.runs))
+      if runs.count() is not len(args.runs):
+         print('The list contains non existing runs.')
+         exit(1)
+
+      for run in runs:
+         try:
+            run.compile()
+         except CompilationError as e:
+            print('An error occured while compiling the code.')
+            print('For more information see {}'.format('/tmp/micromegas_make.log'))
+
+   def ls(self, argv):
+      parser = argparse.ArgumentParser(
+         description='List runs or groups.'
+      )
+      parser.add_argument('--groups', action='store_true',
+            help='List groups not runs.')
+      args = parser.parse_args(argv)
+
+      def format_date(date):
+         return '{:%Y-%m-%d %H:%M}'.format(date) if date else '----'
+
+      if not args.groups:
+         table = PrettyTable(['Created', 'ID', 'Name', 'Description', 'Particleconversion', 'Drift', 'Avalanche'])
+         for run in self.session.query(Run).order_by(Run.id.desc()).all():
+            table.add_row([format_date(run.created_at), run.id, run.name, run.message,
+               format_date(run.last_run_particleconversion), format_date(run.last_run_drift),
+               format_date(run.last_run_avalanche)])
+         print(table)
+      else:
+         table = PrettyTable(['ID', 'Name', 'Description'])
+         for run_group in self.session.query(RunGroup).order_by(RunGroup.id.asc()):
+            table.add_row([run_group.id, run_group.name, run_group.description])
+         print(table)
+
+   def status(self, argv):
+      """ Check the status of running jobs. """
+      parser = argparse.ArgumentParser(
+         description='Status on given runs.'
+      )
+
+      parser.add_argument('-d', '--detailed', action='store_true',
+            help='give a more detailed status.')
+      parser.add_argument('--step', default=None,
+            help='give status for step.')
+      args = parser.parse_args(argv)
+
+      # Get running jobs
+      try:
+         squeue_response = check_output('squeue -u $USER -h -o "%A %j"', shell=True,
+               stderr=DEVNULL).decode('utf-8')
+         running_jobs = [s.split() for s in squeue_response.splitlines()]
+      except CalledProcessError as e:
+         print('No running jobs.')
+         return
+
+      # Get terminal width for beautiful output
+      terminal_rows, terminal_columns = [ int(a) for a in os.popen('stty size', 'r').read().split() ]
+      def cprint(text, color, end='\n'):
+         print('\033[{}m{}\033[0m'.format(color, text), end=end)
+      for slurm_jobid, name in running_jobs:
+         print('Job {:0>4}: '.format(name[1:]), end='')
+         step = name[0]
+         if step == 'p':
+            print('Running particleconversion')
+         elif step == 'd' or step == 'a':
+            if step == 'd':
+               print('Running drift')
+               step = 'drift'
+            if step == 'a':
+               print('Running avalanche')
+               step = 'avalanche'
+            if args.detailed:
+               status = [line.strip().split(':') for line in check_output(
+                  os.path.expandvars(f'srun -u --jobid={slurm_jobid}'
+                  f' $MICROMEGAS_SCRIPTS_PATH/get_status.sh'
+                  f' /localscratch/{slurm_jobid} {step}'),
+                  shell=True).decode('utf-8').strip().split('\n')]
+
+               status_width = max([ len(s[0]) + len(s[1]) for s in status ]) + 6
+               cols = int(terminal_columns / status_width)
+               for i, s in enumerate(status):
+                  if s[1] == 'Done.':
+                     color = 32
+                  elif s[1] == 'n/a':
+                     color = 31
+                  else:
+                     color = 33
+                  cprint('{: <{}}'.format('{0[0]}: {0[1]}'.format(s), status_width), color, end='')
+                  if (i + 1) % cols == 0:
+                     print()
+               print('\n')
+
+   def details(self, argv):
+      parser = argparse.ArgumentParser(
+         description='Show detailed information about the specified run.'
+      )
+      parser.add_argument('id', help='ID of the run.', type=int)
+      args = parser.parse_args(argv)
+
+      run = self.session.query(Run).filter(Run.id == args.id).one()
+
+      # Load run configuration
+      conf = ConfigParser(interpolation=ExtendedInterpolation())
+      conf.read(os.path.join(run.get_run_path(), 'simulation.conf'))
+
+      def print_prop(name, value, format_string=''):
+         print(('\033[34m{: <20}:\033[m {' + format_string + '}').format(name, value))
+      print_prop('ID:', run.id)
+      print_prop('Name:', run.name)
+      print_prop('Message:', run.message)
+      print_prop('Run path:', run.get_run_path())
+      print_prop('Output path:', run.get_output_path())
+      print_prop('Created at', run.created_at, format_string=':%Y-%m-%d %H:%M')
+      print()
+      print_prop('Particles:', '{} {}s with E={} keV'.format(
+         conf['general']['number_of_particles'], conf['general']['particle_type'],
+         conf['general']['particle_energy']))
+      if conf['detector']['penning_transfer_enable']:
+         penning_gases = eval(conf['detector']['penning_transfer_gas'])
+         print_prop('Penning transfer', ', '.join([ '{}: {:.2f}%'.format(gas, penning_r * 100) for gas, penning_r in penning_gases.items() ]))
+      print_prop('Drift field', '{} V/cm'.format(conf['drift']['field']))
+      print_prop('Amplification gap', '{} µm'.format(conf['amplification']['gap']))
+      print_prop('Amplification field', '{} V/cm'.format(conf['amplification']['field']))
+
+   def run(self, argv):
+      """ Run the specified jobs.  """
+      parser = argparse.ArgumentParser(
+         description='Submit the jobs for the specified job(s).'
+      )
+
+      parser.add_argument('step', choices=('particleconversion', 'drift', 'avalanche'), help='Which simulation step to run.')
+      parser.add_argument('runs', help='ID of the run(s). Supported formats: "1", "1-3", "[1, 5-9]"', type=run_list)
+      parser.add_argument('-n', '--cores', type=int, choices=range(1, 65), metavar='[1-64]', default=None,
+            help='Number of cores per job.')
+      parser.add_argument('-q', '--queue', default='short', help='Specify which queue to use.')
+      parser.add_argument('-t', '--time', help='Time limit for each job in the format d-hh:mm).', default='00-05:00:00')
+      parser.add_argument('-m', '--memory', type=int, default='500', help='Memory usage per thread in MB.')
+      parser.add_argument('--num-split', type=int, default=64)
+      parser.add_argument('--local', action='store_true')
+      parser.add_argument('--account', default='atlashpc', help='Slurm computing account to use.')
+
+      args = parser.parse_args(argv)
+
+      if args.step == 'particleconversion':
+         args.cores = 1 if not args.cores else args.cores
+      else:
+         args.cores = 64 if not args.cores else args.cores
+         args.queue = 'nodeshort' if args.cores == 64 and args.queue == 'short' else args.queue
+
+      # Check if jobs exist
+      runs = self.session.query(Run).filter(Run.id.in_(args.runs))
+      if runs.count() is not len(args.runs):
+         print('The list contains non existing runs.')
+         exit(1)
+
+      for run in runs:
+         # Split the input file before executing the code
+         if args.step == 'drift':
+            if not glob.glob(os.path.join(run.get_output_path(), '[0-9]*_particleconversion.root')):
+               try:
+                  # Split the input files for drift into N files for running in parallel
+                  check_output('{} "{}"'.format(
+                     os.path.expandvars('$MICROMEGAS_SCRIPTS_PATH/job_split'),
+                     os.path.join(run.get_output_path(), 'particleconversion.root')), shell=True)
+               except CalledProcessError as e:
+                  print('An error occured while splitting the file.')
+                  print(e)
+                  exit(1)
+         if args.step == 'avalanche':
+            if len(glob.glob(os.path.join(run.output_path, '[0-9]*_drift.root'))) != args.num_split:
+               try:
+                  if not os.path.isfile(os.path.join(run.output_path, 'drift.root')):
+                     # If "drift.root" does not exist, join the drift output files to one file
+                     check_output('{} "{}" {}'.format(
+                        os.path.expandvars('$MICROMEGAS_SCRIPTS_PATH/job_join'),
+                        os.path.join(run.get_output_path(), 'drift.root'),
+                        ' '.join(glob.glob(os.path.join(run.get_output_path(), '*_drift.root')))
+                        ), shell=True)
+
+                  # Remove all the partial output files from drift
+                  check_output('rm -f {}'.format(
+                     os.path.join(run.get_output_path(), '*_drift.root')), shell=True)
+
+                  # Split the drift file to N files for running in parallel
+                  check_output('{} "{}" {}'.format(
+                     os.path.expandvars('$MICROMEGAS_SCRIPTS_PATH/job_split'),
+                     os.path.join(run.get_output_path(), 'drift.root'),
+                     args.num_split), shell=True)
+               except CalledProcessError as e:
+                  print('An error occured while splitting the file.')
+                  print(e)
+                  exit(1)
+
+         # Submit the job with given parameters
+         try:
+            if args.step == 'particleconversion' and args.local:
+               check_output(os.path.expandvars(
+                  f'$MICROMEGAS_SCRIPTS_PATH/job_particleconversion'
+                  f' {run.get_output_path()} {run.get_run_path()}'), shell=True)
+            elif args.step == 'particleconversion' or args.step == 'drift':
+               command = os.path.expandvars(
+                     f'sbatch -A {args.account} --mail-type=END,FAIL --partition={args.queue}'
+                     f' --ntasks=1 --cpus-per-task={args.cores} --mem-per-cpu={args.memory}MB'
+                     f' -t {args.time} --job-name="{args.step[0]}{run.id:0>4}"'
+                     f' -o "{run.get_output_path()}/{args.step}.slurm-log"'
+                     f' $MICROMEGAS_SCRIPTS_PATH/job_{args.step} {run.get_output_path()}'
+                     f' {run.get_run_path()}'
+                   )
+               check_output(command, shell=True)
+            elif args.step == 'avalanche':
+               files = sorted(glob.glob(os.path.join(run.get_output_path(), '[0-9]*_drift.root')), reverse=True)
+               for i in range(math.ceil(args.num_split / 64)):
+                  file_list = [files.pop() for i in range(min(64, len(files)))]
+                  command = os.path.expandvars(
+                        f'sbatch -A {args.account} --mail-type=END,FAIL --partition={args.queue} --ntasks=1'
+                        f' --cpus-per-task={args.cores} --mem-per-cpu={args.memory}MB -t {args.time}'
+                        f' --job-name="{args.step[0]}{run.id:0>4}"'
+                        f' -o "{run.get_output_path()}/{args.step}.slurm-log"'
+                        f' $MICROMEGAS_SCRIPTS_PATH/job_{args.step} {run.get_run_path()} {" ".join(file_list)}'
+                      )
+                  check_output(command, shell=True)
+
+            if args.step == 'particleconversion':
+               run.last_runs_particleconversion = datetime.now()
+            elif args.step == 'drift':
+               run.last_runs_drift = datetime.now()
+            elif args.step == 'avalanche':
+               run.last_runs_avalanche = datetime.now()
+         except CalledProcessError as e:
+            print('An error occured submitting the job.')
+            print(e)
+            exit(1)
+
+   def join(self, argv):
+      """ Join the specified jobs.  """
+      parser = argparse.ArgumentParser(
+         description='Join the output files for the specified job(s).'
+      )
+
+      parser.add_argument('runs', type=run_list,
+            help='ID of the run(s). Supported formats: "1", "1-3", "[ 1, 5-9 ]"')
+      args = parser.parse_args(argv)
+
+      # Check if jobs exist
+      runs = self.session.query(Run).filter(Run.id.in_(args.runs))
+      if runs.count() is not len(args.runs):
+         print('The list contains non existing runs.')
+         exit(1)
+
+      for run in runs:
+         run.join()
+
+   def remove(self, argv):
+      """ Remove one or more run configurations (and possibly also the generated output files.) """
+      parser = argparse.ArgumentParser(
+         description='Remove one or more run configurations (and possibly also the generated output files.)'
+      )
+
+      parser.add_argument('runs', help='ID of the run(s). Supported formats: "1", "1-3", "[ 1, 5-9 ]"', type=run_list)
+      parser.add_argument('-f', '--force', action='store_true', help='Delete output and run folder without confirmation!')
+
+      args = parser.parse_args(argv)
+
+      # Check if jobs exist
+      for run in self.session.query(Run).filter(Run.id.in_(args.runs)):
+         if not args.force:
+            print('Deleting run {}'.format(run.id))
+            print('The following folders will be deleted if you continue:')
+            print(run.get_output_path())
+            print(run.get_run_path())
+
+            result = input('Are you shure you want to delete the following files? [Y/n] ').lower()
+            if result == 'y' or result == '':
+               self.session.delete(run)
+            else:
+               print('Deletion of run {} skipped.'.format(run.id))
+         print('---------------------------------------------------------------------')
+
+      self.session.commit()
+
+
+if __name__ == '__main__':
+   rm = RunManager(sys.argv)
+

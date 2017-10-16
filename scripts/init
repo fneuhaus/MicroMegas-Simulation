@@ -4,7 +4,8 @@ export SCRIPTS_PATH=$MICROMEGAS_HOME/scripts
 export MICROMEGAS_SCRIPTS_PATH=$MICROMEGAS_HOME/scripts
 export MICROMEGAS_SIMULATION_PATH="$MICROMEGAS_HOME/simulation"
 export MICROMEGAS_OUTPUT_PATH="/etapfs03/atlashpc/fneuhaus/micromegas"
-export MICROMEGAS_RUN_PATH="$MICROMEGAS_HOME/simulation/runs/"
+export MICROMEGAS_RUN_PATH="$MICROMEGAS_HOME/simulation/runs"
+export MICROMEGAS_RUN_DATABASE="$MICROMEGAS_HOME/simulation/runs/run_db.sqlite"
 
 
 export PARTICLECONVERSION_EXEC=$MICROMEGAS_HOME/simulation/particleconversion/build/particleconversion
