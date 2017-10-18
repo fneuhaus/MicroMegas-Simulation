@@ -87,22 +87,25 @@ class Run(Base):
    def get_run_path(self):
       if self.abs_run_path:
          return self.abs_run_path
-      return os.path.expandvars(self.run_path)
+      path = os.path.expandvars(self.run_path)
+      if self.group:
+         path = path.replace('$GROUPNAME', self.group.name)
+      return path
 
    def get_output_path(self):
       if self.abs_output_path:
          return self.abs_output_path
       path = os.path.expandvars(self.output_path)
       if self.group:
-         path.replace('$GROUPNAME', self.group.name)
+         path = path.replace('$GROUPNAME', self.group.name)
       return path   
 
    def create_folders(self):
       # Create necessary folders
       if not os.path.exists(self.get_run_path()):
-         os.mkdir(self.get_run_path())
+         os.makedirs(self.get_run_path())
       if not os.path.exists(self.get_output_path()):
-         os.mkdir(self.get_output_path())
+         os.makedirs(self.get_output_path())
 
    def delete_folders(self):
       if os.path.exists(self.get_run_path()):
@@ -121,11 +124,12 @@ class Run(Base):
          self.delete_folders()
          raise CompilationError(build_result, logfile_path)
 
-   def join(self):
+   def join(self, force=False):
       """ Join the output file. """
       # Try to join drift
       if (glob.glob(os.path.join(self.get_output_path(), '*_drift.root'))
-            and not os.path.exists(os.path.join(self.get_output_path(), 'drift.root'))):
+            and (not os.path.exists(os.path.join(self.get_output_path(), 'drift.root'))
+               or force)):
          print('Joining drift for job {:0>4}'.format(self.id))
          check_output(os.path.expandvars(
             ('$MICROMEGAS_SCRIPTS_PATH/job_join'
@@ -134,7 +138,8 @@ class Run(Base):
 
       # Try to join avalanche
       if (glob.glob(os.path.join(self.get_output_path(), '*_avalanche.root'))
-            and not os.path.exists(os.path.join(self.get_output_path(), 'avalanche.root'))):
+            and (not os.path.exists(os.path.join(self.get_output_path(), 'avalanche.root'))
+               or force)):
          print('Joining avalanche for job {:0>4}'.format(self.id))
          check_output(os.path.expandvars(
             ('$MICROMEGAS_SCRIPTS_PATH/job_join {output_path}/avalanche.root'

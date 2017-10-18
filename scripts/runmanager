@@ -114,12 +114,18 @@ class RunManager:
             exit(1)
 
       # Create a new run
-      run = Run(name=args.name, message=args.message, group=args.group, created_at=datetime.now())
+      run = Run(name=args.name, message=args.message, created_at=datetime.now())
       self.session.add(run)
       self.session.flush()
       self.session.refresh(run)
       run.run_path = os.path.join('$MICROMEGAS_RUN_PATH', 'run{}'.format(run.get_id()))
       run.output_path = os.path.join('$MICROMEGAS_OUTPUT_PATH', 'run{}'.format(run.get_id()))
+      if args.group:
+         run.group = args.group
+         run.run_path = os.path.join('$MICROMEGAS_RUN_PATH', '$GROUPNAME',
+               'run{}'.format(run.get_id()))
+         run.output_path = os.path.join('$MICROMEGAS_OUTPUT_PATH',
+               '$GROUPNAME', 'run{}'.format(run.get_id()))
 
       # Check if run or output path exists (if so stop, because somethings wrong then...)
       if os.path.exists(run.get_run_path()):
@@ -362,9 +368,9 @@ class RunManager:
                   print(e)
                   exit(1)
          if args.step == 'avalanche':
-            if len(glob.glob(os.path.join(run.output_path, '[0-9]*_drift.root'))) != args.num_split:
+            if len(glob.glob(os.path.join(run.get_output_path(), '[0-9]*_drift.root'))) != args.num_split:
                try:
-                  if not os.path.isfile(os.path.join(run.output_path, 'drift.root')):
+                  if not os.path.isfile(os.path.join(run.get_output_path(), 'drift.root')):
                      # If "drift.root" does not exist, join the drift output files to one file
                      check_output('{} "{}" {}'.format(
                         os.path.expandvars('$MICROMEGAS_SCRIPTS_PATH/job_join'),
@@ -434,6 +440,7 @@ class RunManager:
 
       parser.add_argument('runs', type=run_list,
             help='ID of the run(s). Supported formats: "1", "1-3", "[ 1, 5-9 ]"')
+      parser.add_argument('-f', '--force', action='store_true', help='Force rejoining')
       args = parser.parse_args(argv)
 
       # Check if jobs exist
@@ -443,7 +450,7 @@ class RunManager:
          exit(1)
 
       for run in runs:
-         run.join()
+         run.join(args.force)
 
    def remove(self, argv):
       """ Remove one or more run configurations (and possibly also the generated output files.) """
