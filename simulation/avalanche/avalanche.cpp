@@ -9,6 +9,12 @@
 #include <TRandom3.h>
 #include <TVector3.h>
 #include <TMath.h>
+/* [[[cog
+from MMconfig import *
+if conf.getboolean('amplification', 'store_time_per_event', fallback=False):
+   cog.outl('#include<chrono>')
+]]]*/
+//[[[end]]]
 
 #include "MediumMagboltz.hh"
 #include "ComponentElmer.hh"
@@ -105,6 +111,13 @@ int main(int argc, char * argv[]) {
    outputTree->Branch("x1", &x1); outputTree->Branch("y1", &y1); outputTree->Branch("z1", &z1); outputTree->Branch("e1", &e1); outputTree->Branch("t1", &t1);
    outputTree->Branch("signal_t", &signal_t);
    outputTree->Branch("signal_amplitude", &signal_amplitude);
+   /*[[[cog
+   from MMconfig import *
+   if conf.getboolean('amplification', 'store_time_per_event', fallback=False):
+      cog.outl('Double_t time_per_event;')
+      cog.outl('outputTree->Branch("time_per_event", &time_per_event);')
+   ]]]*/
+   //[[[end]]]
 
    // Import an Elmer-created LEM and the weighting field for the readout electrode
    /* [[[cog
@@ -235,6 +248,13 @@ int main(int argc, char * argv[]) {
 
    // actual simulation
    for (int i = 0; i < numberOfEvents; i++) {
+
+      /*[[[cog
+      from MMconfig import *
+      if conf.getboolean('amplification', 'store_time_per_event', fallback=False):
+         cog.outl('auto begin = std::chrono::high_resolution_clock::now();')
+      ]]]*/
+      //[[[end]]]
       int numberOfElectrons;
 
       inputTree->GetEvent(i, 0); // 0 get only active branches, 1 get all branches
@@ -310,6 +330,14 @@ int main(int argc, char * argv[]) {
          signal_t.push_back(signal_t_min + bin * signal_t_stepsize);
          signal_amplitude.push_back(sensor->GetSignal("readout", bin) / ElementaryCharge);
       }''')
+      ]]]*/
+      //[[[end]]]
+
+      /*[[[cog
+      from MMconfig import *
+      if conf.getboolean('amplification', 'store_time_per_event', fallback=False):
+         cog.outl('auto end = std::chrono::high_resolution_clock::now();')
+         cog.outl('time_per_event = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();')
       ]]]*/
       //[[[end]]]
 
