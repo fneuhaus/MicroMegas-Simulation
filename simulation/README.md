@@ -1,10 +1,10 @@
 # Simulation
-Dependencies: FreeCAD, Elmer, gmsh, Garfield++, Geant4, ROOT, python3 + cogapp
+Dependencies: FreeCAD, COMSOL, Garfield++ (best with modified version), Geant4, ROOT, python3 + cogapp
 
 For the configuration of the simulated setup see [simulation.conf](simulation.conf). This config file is used to cog the cpp source files and solver files to adapt the simulation accordingly.
 
-## Photoconversion simulation procedure
-Assuming you are in the photoconversion simulation directory:
+## Particleconversion simulation procedure
+Assuming you are in the particleconversion simulation directory:
 
 1. Create build directory:
 
@@ -16,13 +16,14 @@ Assuming you are in the photoconversion simulation directory:
 
 3. Configure Geant4 build:
 
-	`cmake -DCMAKE_INSTALL_PREFIX=.. ..`
+	`cmake ..`
 
 4. Build Geant4 simulation:
 
 	`make`
 
-5. Run simulation interactively or with macro file by setting the photoconversion.macro_path in [simulation.conf](simulation.conf)
+5. Run simulation interactively or with macro file by setting the
+   particleconversion.macro_path in [simulation.conf](simulation.conf)
 
 6. If run interactively you might want to init visualisation:
 
@@ -34,6 +35,7 @@ Assuming you are in the drift simulation directory:
 1. Build Garfield++ executable:
 
 	`make`
+
 2. Run simulation:
 
 	`./drift`
@@ -43,31 +45,20 @@ Assuming you are in the avalanche simulation directory:
 
 1. Export FreeCAD model (geometry/geometry.fcstd) to .step file.
 
-2. Mesh .step file to .msh file with gmsh, call ElmerSolver to generate electric field and build Garfield++ executable: 
+2. Use COMSOL to load the mesh file and calculate the field map. Afterwards
+   export it in a regular grid for Garfield++ to read in.
 
-	`make`
-3. Run simulation:
+3. `make`
+
+4. Run simulation:
 
 	`./avalanche`
 
 ## More information
 
-* Avalanche step 2: clmax option can be adapted as needed. Note that to large clmax will create intersecting surfaces.
-
-* Avalanche step 3: autoclean option is important to avoid possible segmentation faults later:
-
-	```
-	Program received signal SIGSEGV: Segmentation fault - invalid memory reference.
-
-	Backtrace for this error:
-	#0  0x7FF90DA2A407
-	#1  0x7FF90DA2AA1E
-	#2  0x7FF90BEBC17F
-	#3  0x7FF90E378AB8
-	#4  0x7FF90E38B7D8
-	#5  0x7FF90E3A94B7
-	#6  0x7FF90E226100
-	#7  0x7FF90E49C414
-	#8  0x400F7E in solver at Solver.F90:69
-	Segmentation fault
-	```
+* Avalanche step 1: In
+  [avalanche/geometry/create_mesh.py](avalanche/geometry/create_mesh.py) is a
+  macro to create a mesh from given parameters.
+  Please note, that due to a bug in FreeCAD 0.16, you should use the nightly
+  version found in their git
+  (FreeCAD-0.17.git201710112032.glibc2.17-x86_64.AppImage works).

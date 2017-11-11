@@ -17,7 +17,7 @@ if conf.getboolean('amplification', 'store_time_per_event', fallback=False):
 //[[[end]]]
 
 #include "MediumMagboltz.hh"
-#include "ComponentElmer.hh"
+#include "ComponentVoxel.hh"
 #include "Sensor.hh"
 #include "ViewField.hh"
 #include "ViewCell.hh"
@@ -50,24 +50,29 @@ int main(int argc, char * argv[]) {
    ]]] */
    // [[[end]]]
 
-   TString inputfileName, outputfileName;
+   TString inputfileName, outputfileName, meshFile;
+   // use file from conf
+   /*[[[cog
+   from MMconfig import *
+   cog.outl("inputfileName = \"{}\";".format(conf["amplification"]["in_filename"]))
+   cog.outl("outputfileName = \"{}\";".format(conf["amplification"]["out_filename"]))
+   cog.outl("meshFile = \"{}\";".format(conf["amplification"]["mesh_file"]))
+   ]]]*/
+   //[[[end]]]
+
    if (argc == 3) {
       inputfileName = argv[1];
       outputfileName = argv[2];
    } else if (argc == 2) {
       cerr << "Only input or output file specified, give both!" << endl;
-   } else {
-      // use file from conf
-      /*[[[cog
-      from MMconfig import *
-      cog.outl("inputfileName = \"{}\";".format(conf["amplification"]["in_filename"]))
-      cog.outl("outputfileName = \"{}\";".format(conf["amplification"]["out_filename"]))
-      ]]]*/
-      //[[[end]]]
    }
 
    if (!inputfileName || !outputfileName) {
       cerr << "No input/output file specified or given!" << endl;
+      return 1;
+   }
+   if (!meshFile) {
+      cerr << "No mesh file specified or given!" << endl;
       return 1;
    }
 
@@ -119,31 +124,29 @@ int main(int argc, char * argv[]) {
    ]]]*/
    //[[[end]]]
 
-   // Import an Elmer-created LEM and the weighting field for the readout electrode
+   // Import a COMSOL generated field map
    /* [[[cog
    from MMconfig import *
+   from MMutils import determine_mesh_cells
+   mesh_file = conf['amplification']['mesh_file']
+   mesh_definition = determine_mesh_cells(mesh_file)
+   if not mesh_definition:
+      mesh_definition = 'fm->SetMesh(65, 65, 227, -64e-4, 64e-4, -64e-4, 64e-4, -152.1e-4, 300.1e-4);'
 
-   use_local_mesh_file = bool(conf["amplification"]["use_local_mesh_file"])
-   geometry_path = conf["amplification"]["geometry_path"] if not use_local_mesh_file else './geometry'
    cog.outl(
       """
-      ComponentElmer* fm = new ComponentElmer(
-         "{0}/geometry/mesh.header",
-         "{0}/geometry/mesh.elements",
-         "{0}/geometry/mesh.nodes",
-         "{0}/dielectrics.dat",
-         "{0}/geometry/field.result",
-         "mm"
-      );
+      ComponentVoxel *fm = new ComponentVoxel();
+      {}
+      if (!(fm->LoadData("{}", "XYZ", true, true, 1e-4, 1., 1.))) {{
+         return 1;
+      }}
       fm->EnablePeriodicityX();
       fm->EnablePeriodicityY();
-      """.format(geometry_path)
+      fm->PrintRegions();
+      """.format(mesh_definition, mesh_file)
    )
-   if conf['amplification'].getboolean('signal_calculation_enable'):
-      cog.outl('fm->SetWeightingField("{0}/geometry/field_weight.result", "readout");'.format(geometry_path))
    ]]] */
    //[[[end]]]
-   fm->PrintRange();
 
    // Define the medium
    MediumMagboltz* gas = new MediumMagboltz();
@@ -159,6 +162,9 @@ int main(int argc, char * argv[]) {
    gas->SetMaxElectronEnergy(200.);
    gas->Initialise(true);
 
+   fm->SetMedium(0, gas);
+   fm->PrintRegions();
+
    // Penning transfer
    /*[[[cog
    from MMconfig import *
@@ -170,18 +176,9 @@ int main(int argc, char * argv[]) {
    ]]]*/
    //[[[end]]]
 
-   // Set the right material to be the gas (probably 0)
-   int nMaterials = fm->GetNumberOfMaterials();
-   for (int i = 0; i < nMaterials; i++) {
-      if (fabs(fm->GetPermittivity(i) - 1.) < 1e-3) {
-         fm->SetMedium(i, gas);
-      }
-   }
-
    Sensor* sensor = new Sensor();
    sensor->AddComponent(fm);
    sensor->SetArea(areaXmin, areaYmin, areaZmin, areaXmax, areaYmax, areaZmax);
-   sensor->AddElectrode(fm, "readout");
 
    /*
     * Create the avalanche calculation and enable signal calculations if activated in the config.
@@ -351,6 +348,7 @@ int main(int argc, char * argv[]) {
       outputTree->Fill();
       x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
       x1.clear(); y1.clear(); z1.clear(); e1.clear(); t1.clear();
+      status.clear();
       /*[[[cog
       from MMconfig import *
       if conf['amplification'].getboolean('signal_calculation_enable'):
