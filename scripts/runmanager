@@ -139,10 +139,10 @@ class RunManager:
       run.create_folders()
 
       # Copy the mesh file to the avalanche directory
-      if args.mesh:
-         if not os.path.exists(os.path.join(run.get_run_path(), 'geometry')):
-            os.mkdir(os.path.join(run.get_run_path(), 'geometry'))
-         copy2(args.mesh, os.path.join(run.get_run_path(), 'geometry', 'geometry.step'))
+      #  if args.mesh:
+      #     if not os.path.exists(os.path.join(run.get_run_path(), 'geometry')):
+      #        os.mkdir(os.path.join(run.get_run_path(), 'geometry'))
+      #     copy2(args.mesh, os.path.join(run.get_run_path(), 'geometry', 'geometry.step'))
 
       # Change gap size in config file
       copy2(os.path.expandvars('$MICROMEGAS_SIMULATION_PATH/simulation.conf'),
@@ -151,6 +151,7 @@ class RunManager:
          conf = ConfigParser(interpolation=ExtendedInterpolation())
          conf.read(os.path.join(run.get_run_path(), 'simulation.conf'))
          conf['amplification']['gap'] = '{}'.format(args.gap_size * 1e-4)
+         conf['amplification']['mesh_file'] = os.path.abspath(args.mesh)
          with open(os.path.join(run.get_run_path(), 'simulation.conf'), 'w') as config_file:
             conf.write(config_file)
 
