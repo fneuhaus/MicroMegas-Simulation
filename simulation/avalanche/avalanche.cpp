@@ -140,8 +140,8 @@ int main(int argc, char * argv[]) {
       if (!(fm->LoadData("{}", "XYZ", true, true, 1e-4, 1., 1.))) {{
          return 1;
       }}
-      fm->EnablePeriodicityX();
-      fm->EnablePeriodicityY();
+      fm->EnableMirrorPeriodicityX();
+      fm->EnableMirrorPeriodicityY();
       fm->PrintRegions();
       """.format(mesh_definition, mesh_file)
    )
@@ -266,7 +266,6 @@ int main(int argc, char * argv[]) {
          // Set the initial position [cm], direction, starting time [ns] and initial energy [eV]
          //[[[cog from MMconfig import *; cog.outl("TVector3 initialPosition = TVector3(inPosX->at(e), inPosY->at(e), {});".format(conf["amplification"]["z_max"])) ]]]
          //[[[end]]]
-         //TVector3 initialPosition = TVector3(inPosX->at(e), inPosY->at(e), inPosZ->at(e));
          TVector3 initialDirection = TVector3(0., 0., -1.); // 0,0,0 for random initial direction
          Double_t initialTime = inT->at(e);
          Double_t initialEnergy = inEkin->at(e); // override default energy
