@@ -9,17 +9,12 @@ def determine_mesh_cells(filename):
       return ''
 
    input_data = np.genfromtxt(filename, comments='%', dtype='float')
-   range_x = np.max(np.abs(input_data[:,0]))
-   range_y = np.max(np.abs(input_data[:,1]))
-   min_z = np.min(input_data[:,2]) - 0.1
-   #  max_x = np.max(input_data[:,0])
-   #  max_y = np.max(input_data[:,1])
-   max_z = np.max(input_data[:,2]) + 0.1
-   len_x = len(set(input_data[:,0]))
-   len_y = len(set(input_data[:,1]))
-   len_z = len(set(input_data[:,2]))
+   x_data, y_data, z_data = set(input_data[:,0]), set(input_data[:,1]), set(input_data[:,2])
+   x_min, x_max, x_len = min(x_data), max(x_data), len(x_data)
+   y_min, y_max, y_len = min(y_data), max(y_data), len(y_data)
+   z_min, z_max, z_len = min(z_data) - 0.1, max(z_data) + 0.1, len(z_data)
    return 'fm->SetMesh({}, {}, {}, {}e-4, {}e-4, {}e-4, {}e-4, {}e-4, {}e-4);'.format(
-      len_x, len_y, len_z, -range_x, range_x, -range_y, range_y, min_z, max_z)
+      x_len, y_len, z_len, x_min, x_max, y_min, y_max, z_min, z_max)
 
 
 def main(argv):
