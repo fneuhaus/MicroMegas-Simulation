@@ -13,7 +13,11 @@ parser.add_argument('-o', '--output', required=True, help='Output path.')
 parser.add_argument('-n', '--num', type=int, default=10000)
 parser.add_argument('-z', '--z-pos', type=float, default=250,
       help='Z-Position for electrons (in um).')
+parser.add_argument('-e', '--energy', type=float, default=0.4,
+      help='Initial energy of the electrons.')
 parser.add_argument('--rand-xy', action='store_true')
+parser.add_argument('--x-pos', type=float, default=62.5/2)
+parser.add_argument('--y-pos', type=float, default=62.5/2)
 args = parser.parse_args(sys.argv[1:])
 
 f = ROOT.TFile(os.path.expanduser(args.output), 'RECREATE')
@@ -58,16 +62,16 @@ z0.push_back(0)
 t0.push_back(0)
 e0.push_back(0)
 t1.push_back(0)
-e1.push_back(0)
+e1.push_back(args.energy)
 
 for i in range(args.num):
    eventID[0] = i
    if args.rand_xy:
-      x1.push_back(np.random.uniform(0, 0.1))
-      y1.push_back(np.random.uniform(0, 0.1))
+      x1.push_back(np.random.uniform(-62.5e-4, 62.5e-4))
+      y1.push_back(np.random.uniform(-62.5e-4, 62.5e-4))
    else:
-      x1.push_back(0.)
-      y1.push_back(0.)
+      x1.push_back(args.x_pos * 1e-4)
+      y1.push_back(args.y_pos * 1e-4)
    z1.push_back(args.z_pos * 1e-4)
 
    tree.Fill()
