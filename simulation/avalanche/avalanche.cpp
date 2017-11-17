@@ -274,7 +274,18 @@ int main(int argc, char * argv[]) {
          //cout << "Initial Energy  : " << initialEnergy << " eV" << endl;
          //cout << "Initial position: " << initialPosition.x() << ", " << initialPosition.y()  << ", " << initialPosition.z() << " cm" << endl;
 
-         avalanchemicroscopic->AvalancheElectron(initialPosition.x(), initialPosition.y(), initialPosition.z(), initialTime, initialEnergy, initialDirection.x(), initialDirection.y(), initialDirection.z());
+         /*[[[cog
+         from MMconfig import *
+         if conf.getboolean('amplification', 'study_transparency', fallback=False):
+            method = 'DriftElectron'
+         else:
+            method = 'AvalancheElectron'
+         cog.outl(
+         '''avalanchemicroscopic->{}(initialPosition.x(), initialPosition.y(), initialPosition.z(), 
+         initialTime, initialEnergy, initialDirection.x(), initialDirection.y(), 
+         initialDirection.z());'''.format(method))
+         ]]]*/
+         //[[[end]]]
 
          Int_t ne, ni;
          avalanchemicroscopic->GetAvalancheSize(ne, ni);
