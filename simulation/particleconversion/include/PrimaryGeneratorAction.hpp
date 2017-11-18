@@ -4,6 +4,8 @@
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleGun.hh"
 #include "globals.hh"
+#include "OutputManager.hpp"
+#include "TRandom3.h"
 
 class G4ParticleGun;
 class G4Event;
@@ -15,11 +17,12 @@ class G4Box;
 
 class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 	public:
-		PrimaryGeneratorAction();    
+		PrimaryGeneratorAction(OutputManager *outputManager);
 		virtual ~PrimaryGeneratorAction();
 
 		// method from the base class
 		virtual void GeneratePrimaries(G4Event*);         
+      double GetIronSpectrumEnergy();
 	
 		// method to access particle gun
 		const G4ParticleGun* GetParticleGun() const { return fParticleGun; }
@@ -27,6 +30,8 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 	private:
 		G4ParticleGun*  fParticleGun; // pointer a to G4 gun class
 		G4Box* fEnvelopeBox;
+      TRandom3 *fRandom;
+      OutputManager *fOutputManager;
 };
 
 #endif

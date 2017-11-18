@@ -20,6 +20,8 @@ class OutputManager {
 		void Initialize();
 		void Save();
 		void PrintStatistic();
+      void SetPrimaryParticleProperties(G4double px, G4double py, G4double pz,
+            G4double energy);
 		TTree* GetDetectorTree() { return fDetectorTree; }
 
 		void FillEvent(TTree*, G4Track*);
@@ -31,6 +33,8 @@ class OutputManager {
 		TTree*   fDetectorTree;
 
 		G4int		fEventID;
+		G4double fPrimaryEnergy;
+      G4double fPrimaryPx, fPrimaryPy, fPrimaryPz;
 		G4double fPhiVertex, fPhi;
 		G4double fThetaVertex, fTheta;
 		G4double fT;

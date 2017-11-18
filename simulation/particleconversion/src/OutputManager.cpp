@@ -10,7 +10,11 @@
 #include <TString.h>
 
 OutputManager::OutputManager(TString outputfileName)
-   : fRootFile(0), fEventID(0), fPhiVertex(0), fPhi(0), fThetaVertex(0), fTheta(0), fT(0), fEkinVertex(0), fEkin(0), fEloss(0), fZVertex(0), fTrackLength(0), fPx(0), fPy(0), fPz(0), fPosX(0), fPosY(0), fPosZ(0), fOutputfileName(outputfileName) {
+   : fRootFile(0), fEventID(0), fPrimaryEnergy(0), fPrimaryPx(0),
+   fPrimaryPy(0), fPrimaryPz(0), fPhiVertex(0), fPhi(0), fThetaVertex(0),
+   fTheta(0), fT(0), fEkinVertex(0), fEkin(0), fEloss(0), fZVertex(0),
+   fTrackLength(0), fPx(0), fPy(0), fPz(0), fPosX(0), fPosY(0), fPosZ(0),
+   fOutputfileName(outputfileName) {
 }
 
 OutputManager::~OutputManager() {
@@ -29,10 +33,15 @@ void OutputManager::Initialize() {
 
    fDetectorTree = new TTree("detectorTree", "Conversion");
    fDetectorTree->Branch("eventID", &fEventID, "eventID/i"); // event id
+   fDetectorTree->Branch("primaryEnergy", &fPrimaryEnergy, "primaryEnergy/D"); // primary energy
+   fDetectorTree->Branch("primaryPx", &fPrimaryPx, "primaryPx/D"); // primary px
+   fDetectorTree->Branch("primaryPy", &fPrimaryPy, "primaryPy/D"); // primary py
+   fDetectorTree->Branch("primaryPz", &fPrimaryPz, "primaryPz/D"); // primary pz
    fDetectorTree->Branch("phi", &fPhi, "phi/D"); // phi angle
    fDetectorTree->Branch("theta", &fTheta, "theta/D"); // theta angle to z axis
    fDetectorTree->Branch("EkinVertex", &fEkinVertex, "EkinVertex/D");
    fDetectorTree->Branch("Ekin", &fEkin, "Ekin/D"); // kinetic energy
+   fDetectorTree->Branch("Eloss", &fEloss, "Eloss/D"); // kinetic energy
    fDetectorTree->Branch("ZVertex", &fZVertex, "ZVertex/D"); // z value of the vertex position (track creation point)
    fDetectorTree->Branch("TrackLength", &fTrackLength, "TrackLengh/D");
    fDetectorTree->Branch("PosX", &fPosX, "PosX/D"); // x position
@@ -52,6 +61,14 @@ void OutputManager::Save() {
       fRootFile->Close();
       G4cout << "\n----> Output Tree is saved \n" << G4endl;
    }
+}
+
+void OutputManager::SetPrimaryParticleProperties(G4double px, G4double py, G4double pz,
+            G4double energy) {
+   fPrimaryEnergy = energy;
+   fPrimaryPx = px;
+   fPrimaryPy = py;
+   fPrimaryPz = pz;
 }
 
 void OutputManager::FillEvent(TTree* tree, G4Track* track) {

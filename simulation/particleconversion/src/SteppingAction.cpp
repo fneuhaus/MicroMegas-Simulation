@@ -34,6 +34,7 @@ void SteppingAction::UserSteppingAction(const G4Step *step) {
          if (track->GetParentID() == 1) { // only secondaries
             if (particle->GetParticleType() == "lepton") { // only electrons
                fOutputManager->FillEvent(fOutputManager->GetDetectorTree(), track);
+               track->SetTrackStatus(fStopAndKill);
                run->CountProcesses("gas", track->GetCreatorProcess());
             }
          }
