@@ -1,4 +1,5 @@
 #!/bin/bash
+source ~/.zshrc
 export MICROMEGAS_HOME=$HOME/micromegas
 export SCRIPTS_PATH=$MICROMEGAS_HOME/scripts
 export MICROMEGAS_SCRIPTS_PATH=$MICROMEGAS_HOME/scripts
@@ -30,7 +31,7 @@ export FC=$(which gfortran)
 module load own/geant4/current
 
 # Initialize garfield
-module load own/garfield/current
+module load own/garfield/gcc_6.3.0
 
 # Elmer
 module load own/elmerfem/current

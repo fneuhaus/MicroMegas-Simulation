@@ -113,15 +113,16 @@ class Run(Base):
       if os.path.exists(self.get_output_path()):
          rmtree(self.get_output_path())
 
-   def compile(self):
+   def compile(self, recompile=False):
       """ Call the compile script. """
       logfile_path = os.path.join(self.get_run_path(), 'make.log')
-      build_result = call(os.path.expandvars(
-         f'{os.path.abspath(os.path.dirname(__file__))}/compile_run.sh {self.get_run_path()}'),
-            shell=True, stdout=DEVNULL, stderr=STDOUT)
-
-      if build_result:
-         self.delete_folders()
+      try:
+         build_result = check_output(os.path.expandvars(
+            f'{os.path.abspath(os.path.dirname(__file__))}/compile_run.sh {self.get_run_path()}'),
+               shell=True, stderr=STDOUT)
+      except CalledProcessError as e:
+         if not recompile:
+            self.delete_folders()
          raise CompilationError(build_result, logfile_path)
 
    def join(self, force=False):

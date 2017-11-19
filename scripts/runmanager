@@ -205,10 +205,11 @@ class RunManager:
 
       for run in runs:
          try:
-            run.compile()
+            run.compile(True)
          except CompilationError as e:
             print('An error occured while compiling the code.')
             print('For more information see {}'.format('/tmp/micromegas_make.log'))
+            print(e)
 
    def ls(self, argv):
       parser = argparse.ArgumentParser(

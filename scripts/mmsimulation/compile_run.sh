@@ -43,7 +43,6 @@ cp avalanche/avalanche $TARGET_DIR/
 if [[ -d $TARGET_DIR/geometry ]]; then
    rm -R $TARGET_DIR/geometry
 fi
-cp -r avalanche/geometry/ $TARGET_DIR/
 
 # Copy simulation configuration
 cp simulation.conf $TARGET_DIR/
