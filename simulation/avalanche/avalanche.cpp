@@ -18,7 +18,7 @@ if conf.getboolean('amplification', 'store_time_per_event', fallback=False):
 
 #include "MediumMagboltz.hh"
 #include "ComponentVoxel.hh"
-#include "Sensor.hh"
+#include "SensorCOMSOL.hh"
 #include "ViewField.hh"
 #include "ViewCell.hh"
 #include "Plotting.hh"
@@ -26,7 +26,7 @@ if conf.getboolean('amplification', 'store_time_per_event', fallback=False):
 #include "ViewSignal.hh"
 #include "FundamentalConstants.hh"
 #include "GarfieldConstants.hh"
-#include "AvalancheMicroscopic.hh"
+#include "AvalancheMicroscopicCOMSOL.hh"
 
 using namespace std;
 using namespace Garfield;
@@ -176,14 +176,14 @@ int main(int argc, char * argv[]) {
    ]]]*/
    //[[[end]]]
 
-   Sensor* sensor = new Sensor();
+   SensorCOMSOL* sensor = new SensorCOMSOL();
    sensor->AddComponent(fm);
    sensor->SetArea(areaXmin, areaYmin, areaZmin, areaXmax, areaYmax, areaZmax);
 
    /*
     * Create the avalanche calculation and enable signal calculations if activated in the config.
     */
-   AvalancheMicroscopic* avalanchemicroscopic = new AvalancheMicroscopic();
+   AvalancheMicroscopicCOMSOL* avalanchemicroscopic = new AvalancheMicroscopicCOMSOL();
    avalanchemicroscopic->SetSensor(sensor);
    avalanchemicroscopic->SetCollisionSteps(1);
    if (maxAvalancheSize > 0) {
