@@ -264,7 +264,13 @@ int main(int argc, char * argv[]) {
 
       for (int e = 0; e < numberOfElectrons; e++) {
          // Set the initial position [cm], direction, starting time [ns] and initial energy [eV]
-         //[[[cog from MMconfig import *; cog.outl("TVector3 initialPosition = TVector3(inPosX->at(e), inPosY->at(e), {});".format(conf["amplification"]["z_max"])) ]]]
+         /*[[[cog
+         from MMconfig import *
+         if not conf.getboolean('amplification', 'study_transparency', fallback=False):
+            cog.outl("TVector3 initialPosition = TVector3(inPosX->at(e), inPosY->at(e), {});".format(conf["amplification"]["z_max"]))
+         else:
+            cog.outl("TVector3 initialPosition = TVector3(inPosX->at(e), inPosY->at(e), inPosZ->at(e));")
+         ]]]*/
          //[[[end]]]
          TVector3 initialDirection = TVector3(0., 0., -1.); // 0,0,0 for random initial direction
          Double_t initialTime = inT->at(e);
