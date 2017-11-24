@@ -14,6 +14,12 @@ LDFLAGS = `root-config --glibs` -lGeom -lgfortran -lm \
 
 all: avalanche
 
+gas_file: gas_file.cpp ../simulation.conf
+	# cog.py -r gas_file.cpp
+	$(CXX) $(CFLAGS) gas_file.cpp
+	$(CXX) -o gas_file gas_file.o $(LDFLAGS)
+	rm gas_file.o
+
 plot_field: plot_field.cpp ../simulation.conf
 	cog.py -r plot_field.cpp
 	$(CXX) $(CFLAGS) plot_field.cpp
@@ -32,11 +38,13 @@ avalanche-no-cog: avalanche.cpp
 	rm avalanche.o
 
 clean-cog:
+	cog.py -x -r gas_file.cpp
 	cog.py -x -r plot_field.cpp
 	cog.py -x -r avalanche.cpp
 
 clean:
 	make clean-cog
+	rm gas_file
 	rm plot_field
 	rm avalanche
 	
