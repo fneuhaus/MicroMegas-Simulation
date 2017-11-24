@@ -467,18 +467,20 @@ class RunManager:
 
       # Check if jobs exist
       for run in self.session.query(Run).filter(Run.id.in_(args.runs)):
+         print('Deleting run {}'.format(run.id))
+         result = 'y'
          if not args.force:
-            print('Deleting run {}'.format(run.id))
             print('The following folders will be deleted if you continue:')
             print(run.get_output_path())
             print(run.get_run_path())
 
             result = input('Are you shure you want to delete the following files? [Y/n] ').lower()
-            if result == 'y' or result == '':
-               self.session.delete(run)
-            else:
-               print('Deletion of run {} skipped.'.format(run.id))
-         print('---------------------------------------------------------------------')
+         if result == 'y' or result == '':
+            self.session.delete(run)
+         else:
+            print('Deletion of run {} skipped.'.format(run.id))
+         if not args.force:
+            print('---------------------------------------------------------------------')
 
       self.session.commit()
 
