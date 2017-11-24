@@ -332,7 +332,8 @@ class RunManager:
       )
 
       parser.add_argument('step', choices=('particleconversion', 'drift', 'avalanche'), help='Which simulation step to run.')
-      parser.add_argument('runs', help='ID of the run(s). Supported formats: "1", "1-3", "[1, 5-9]"', type=run_list)
+      parser.add_argument('runs', help='ID of the run(s). Supported formats: "1", "1-3", "[1, 5-9]"',
+            type=lambda x: run_list(x, self.session))
       parser.add_argument('-n', '--cores', type=int, choices=range(1, 65), metavar='[1-64]', default=None,
             help='Number of cores per job.')
       parser.add_argument('-q', '--queue', default='short', help='Specify which queue to use.')

@@ -21,7 +21,7 @@ class CompilationError(Exception):
       self.logfile_path = logfile_path
 
 
-def run_list(s):
+def run_list(s, session=None):
    """ Parse the input string for job numbers.
 
    The parsing supports the following syntaxes:
@@ -53,6 +53,17 @@ def run_list(s):
          else:
             jobs.append(int(item))
       return jobs
+
+   # Check if its a group name
+   if session:
+      group_query = session.query(RunGroup).filter(RunGroup.name == s)
+      if group_query.count() == 1:
+         group = group_query.one()
+         runs_query = session.query(Run).filter(Run.group_id == group.id)
+         result = []
+         for run in runs_query.all():
+            result.append(run.id)
+         return result
 
    raise argparse.ArgumentTypeError
 
