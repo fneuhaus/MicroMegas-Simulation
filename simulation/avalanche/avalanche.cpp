@@ -98,6 +98,7 @@ int main(int argc, char * argv[]) {
    Int_t nele_drift; // number of electrons from drift
    Int_t nele;  // number of electrons in avalanche
    Int_t nelep; // number of electron end points
+   Double_t gain; // gain per electron
    vector<Int_t> status;
    vector<Double_t> x0, y0, z0, e0, t0;
    vector<Double_t> x1, y1, z1, e1, t1;
@@ -111,6 +112,7 @@ int main(int argc, char * argv[]) {
    outputTree->Branch("nele_drift", &nele_drift, "nele_drift/I");
    outputTree->Branch("nele", &nele, "nele/I");
    outputTree->Branch("nelep", &nelep, "nelep/I");
+   outputTree->Branch("gain", &gain, "gain/D");
    outputTree->Branch("status", &status);
    outputTree->Branch("x0", &x0); outputTree->Branch("y0", &y0); outputTree->Branch("z0", &z0); outputTree->Branch("e0", &e0); outputTree->Branch("t0", &t0);
    outputTree->Branch("x1", &x1); outputTree->Branch("y1", &y1); outputTree->Branch("z1", &z1); outputTree->Branch("e1", &e1); outputTree->Branch("t1", &t1);
@@ -361,6 +363,7 @@ int main(int argc, char * argv[]) {
       ]]]*/
       //[[[end]]]
 
+      gain = (double)nele / (double)nele_drift;
       outputTree->Fill();
       x0.clear(); y0.clear(); z0.clear(); e0.clear(); t0.clear();
       x1.clear(); y1.clear(); z1.clear(); e1.clear(); t1.clear();
@@ -376,6 +379,23 @@ int main(int argc, char * argv[]) {
    }
 
    outputFile->cd();
+
+   /*[[[cog
+   from MMconfig import *
+   if conf.getboolean('amplification', 'save_hists', fallback=False):
+      for var_name, num_bins in eval(conf.get('amplification', 'save_variables', fallback='{}')).items():
+         cog.outl('''
+         outputTree->Draw("{name}>>htemp({num_bins})");
+         TH1F *{name}_hist = (TH1F*)gPad->GetPrimitive("htemp");
+         {name}_hist->SetName("{name}");
+         {name}_hist->Write();
+         delete {name}_hist;
+         '''.format(name=var_name, num_bins=num_bins))
+   if not conf.getboolean('amplification', 'save_tree', fallback=True):
+      cog.outl('delete outputTree;')
+   ]]]*/
+   //[[[end]]]
+
    outputFile->Write();
    outputFile->Close();
    inputFile->Close();

@@ -53,7 +53,7 @@
 
    # Penning transfer, 
    penning_transfer_enable = 1
-   penning_transfer_gas = { 'ar': 0.5 }
+   penning_transfer_gas = { 'ar': 0.42 }
 
    # energy needed for electron-ion-pair-production in the detector gas (in eV)
    pair_production_energy = 28.
@@ -97,13 +97,7 @@
    # constrain the maximum avalanche size (if 0 is set no constrains are used)
    max_avalanche_size = 0
 
-   # drift field (positive for drift in -z direction)
-   field = 600.
-
 [amplification]
-   # Use local mesh file
-   use_local_mesh_file = 1
-
    # input file from drift simulation
    in_filename = ${drift:out_filename}
 
@@ -111,7 +105,19 @@
    out_filename = ${general:output_path}/avalanche.root
 
    # path of the geometry files
-   geometry_path = ${general:project_path}/avalanche/geometry
+   mesh_file = ${general:project_path}/avalanche/fields/simple_40kv_600v.txt
+
+   # Do only drift (if true AvalancheMicroscopic->Drift is used instead of
+   # AvalancheMicroscopic->Avalanche
+   study_transparency = 0
+
+   # Output options
+   # Save trees
+   save_tree = 0
+
+   # Save histograms
+   save_hists = 1
+   save_variables = {'nele': 400, 'nelep': 400, 'gain': 400, 'x0': 200, 'y0': 200, 'z0': 200, 't0': 200, 'x1': 200, 'y1': 200, 'z1': 200, 't1': 200}
 
    # enable saving of coordinates
    save_electron_coordinates = 0
@@ -129,17 +135,25 @@
 
    # save electric field / save electric field
    # if you don't want to save the plot remove `draw_field_path`
-   save_electric_field = 1
+   save_electric_field = 0
    electric_field_xbins = 400
    electric_field_ybins = 250
-   electric_field_path = ${general:output_path}/renders/field.pdf
+   electric_field_xmin = -0.01250
+   electric_field_xmax = 0.01250
+   electric_field_zmin = areaZmin
+   electric_field_zmax = 0.003
+   electric_field_path = ${general:output_path}/field.root
+   plot_only = 0
+
+   # timing information
+   store_time_per_event = 1
 
    # size of the amplification gap (normally 128µm)
    gap = 128e-4
 
    # z boundaries of the amplification simulation (to test the mesh transparency z_min=-20µm is a good value to save simulation time)
    z_max = ${drift:z_min}
-   z_min = -200e-4
+   z_min = -${amplification:gap}
 
    # some additional safety distance to prevent electrons from getting captured at the upper z boundary (with: z_max + z_max_safety < space above the mesh in the CAD model)
    z_max_safety = 200e-4
@@ -153,9 +167,3 @@
 
    # Use local time (use only the time in the amplification region)
    use_local_time = 1
-
-   # amplification field
-   # can be defined by 'field' (in V/cm) or 'voltage' (in V)
-   define_field_by = voltage
-   field = 40e3
-   voltage = 500
