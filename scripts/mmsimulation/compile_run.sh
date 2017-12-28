@@ -40,6 +40,7 @@ cp particleconversion/build/particleconversion $TARGET_DIR/
 cp particleconversion/*.mac $TARGET_DIR/
 cp drift/drift $TARGET_DIR/
 cp avalanche/avalanche $TARGET_DIR/
+cp avalanche/avalanche.cpp $TARGET_DIR/
 if [[ -d $TARGET_DIR/geometry ]]; then
    rm -R $TARGET_DIR/geometry
 fi
