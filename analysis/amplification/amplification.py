@@ -25,9 +25,6 @@ def analyse_file(filename):
    #  for i in range(input_tree.get_entries_fast()):
    amplifications = []
    for event in input_file.avalancheTree:
-
-      #  print(type(event.status))
-      #  print(event.status[0])
       if event.nele_drift != 0:
          amplifications.append(event.nele / event.nele_drift)
 
