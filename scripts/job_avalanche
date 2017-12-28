@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH --signal=B:SIGUSR2@600
 
 JOB_DIR=/localscratch/$SLURM_JOBID
 
@@ -24,14 +25,37 @@ echo "Using simulation directory: $WD"
 # GNU Parallel
 module load tools/parallel/20170622
 
+let_finish() {
+   while [ -e /proc/$1 ]; do
+      sleep .6
+   done
+}
+
+cleanup() {
+   PIDS=`ps -aux | grep "$AVALANCHE_EXEC" | awk '{print $2}' | sort | uniq`
+   for pid in $PIDS; do
+      kill -s SIGUSR2 $pid
+   done
+   for pid in $PIDS; do
+      let_finish $pid
+   done
+   cp $JOB_DIR/*.log $OUTPUT_DIR/
+   cp $JOB_DIR/*.root $OUTPUT_DIR/
+   wait
+   exit 1
+}
+
+trap 'cleanup' SIGUSR2
+
 # run parallel on all given files
 # needs about ?M RAM per job
 { for f in $*; do
    filename=`basename $f`
-   echo $f $JOB_DIR/${filename/_drift/_avalanche} $JOB_DIR/${filename/_drift.root/_avalanche.log}
+   cp $f $JOB_DIR/${filename}
+   echo $JOB_DIR/${filename} $JOB_DIR/${filename/_drift/_avalanche} $JOB_DIR/${filename/_drift.root/_avalanche.log}
 done
-} | parallel --colsep " " -j $# --delay 1 --no-notice "$AVALANCHE_EXEC {1} {2} > {3}"
-
+} | parallel --colsep " " -j $# --delay 1 --no-notice "$AVALANCHE_EXEC {1} {2} > {3}" &
+wait $!
 
 # Copy logs and output files to data directory
 cp $JOB_DIR/*.log $OUTPUT_DIR/

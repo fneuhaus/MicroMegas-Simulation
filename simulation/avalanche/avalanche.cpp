@@ -1,6 +1,8 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <signal.h>
+#include <errno.h>
 
 #include <TCanvas.h>
 #include <TApplication.h>
@@ -30,8 +32,20 @@ if conf.getboolean('amplification', 'store_time_per_event', fallback=False):
 
 using namespace std;
 using namespace Garfield;
+TFile* outputFile;
+
+void exitSignalHandler(int _ignored) {
+   cout << "Simulation aborted because of timeout (" << _ignored << ")." << endl;
+   outputFile->Write();
+   outputFile->Close();
+   exit(1);
+}
 
 int main(int argc, char * argv[]) {
+   if (signal((int)SIGUSR2, exitSignalHandler) == SIG_ERR) {
+      std::cout << "Error setting up signal." << std::endl;
+   }
+ 
    /* [[[cog
    from MMconfig import *
    cog.outl(
@@ -105,7 +119,7 @@ int main(int argc, char * argv[]) {
    vector<Double_t> signal_t;
    vector<Double_t> signal_amplitude;
 
-   TFile* outputFile = new TFile(outputfileName, "RECREATE");
+   outputFile = new TFile(outputfileName, "RECREATE");
    outputFile->cd();
    TTree* outputTree = new TTree("avalancheTree", "Avalanches");
    outputTree->Branch("eventID", &eventID);
