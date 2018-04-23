@@ -55,9 +55,6 @@
    penning_transfer_enable = 1
    penning_transfer_gas = { 'ar': 0.42 }
 
-   # energy needed for electron-ion-pair-production in the detector gas (in eV)
-   pair_production_energy = 28.
-
    # cathode foil thickness
    cathode_thickness = 4.e-4
    cathode_material = G4_MYLAR
@@ -97,6 +94,9 @@
    # constrain the maximum avalanche size (if 0 is set no constrains are used)
    max_avalanche_size = 0
 
+   # Field in the drift region in V/cm
+   field = -600
+
 [amplification]
    # input file from drift simulation
    in_filename = ${drift:out_filename}
@@ -112,7 +112,7 @@
    study_transparency = 0
 
    # Output options
-   # Save trees
+   # Save all branches in trees
    save_tree = 0
 
    # Save histograms
